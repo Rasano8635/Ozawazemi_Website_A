@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小澤ゼミナール | 考えるって、面白い。</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;} 
+html{scroll-behavior:smooth; scroll-padding-top: 190px;} 
+body{font-family:'M PLUS Rounded 1c',sans-serif;background:linear-gradient(180deg,#f5fbff 0%,#eef6ff 35%,#f7faff 100%);color:#333;overflow-x:hidden; overflow-anchor: none;}
+
+.blur-circle{position:fixed;border-radius:50%;filter:blur(90px);z-index:-1;opacity:0.45;} .blue-main{width:280px;height:280px;background:#7cc7ff;top:-60px;left:-40px;} .blue-sub{width:340px;height:340px;background:#b0d8ff;bottom:-80px;right:-80px;}
+header{width:100%;padding:20px 7%;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;backdrop-filter:blur(14px);background:rgba(255,255,255,0.65);z-index:999;box-shadow:0 2px 10px rgba(0,0,0,0.03);}
+.logo a{font-size:1.5rem;font-weight:800;color:#4aa8ff;text-decoration:none;transition:0.2s;cursor:pointer;} .logo a:hover{color:#2d5f88;}
+nav{display:flex;gap:18px;align-items:center;} nav a{text-decoration:none;color:#555;font-weight:700;transition:0.2s;cursor:pointer;} nav a:hover{color:#4aa8ff;}
+
+.hero{min-height:70vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 7%;max-width:1320px;margin:0 auto;text-align:center;}
+.hero-text{width:100%;max-width:900px;} 
+.mini-tag{display:inline-block;background:white;padding:12px 24px;border-radius:999px;font-size:1rem;font-weight:800;color:#4aa8ff;box-shadow:0 6px 20px rgba(74,168,255,0.12);margin-bottom:30px;}
+.hero h1{font-size:clamp(3rem, 6vw, 5.5rem);line-height:1.2;font-weight:900;color:#222;margin-bottom:30px;letter-spacing:-1px;} 
+.hero h1 span{color:#4aa8ff;} 
+.hero p{font-size:1.15rem;line-height:1.8;color:#555;font-weight:700;max-width:700px;margin:0 auto;}
+
+.about-video-section{width:100%;max-width:800px;margin:0 auto 50px auto;display:flex;flex-direction:column;align-items:center;}
+.about-video-wrapper{width:100%;position:relative;border-radius:28px;overflow:hidden;box-shadow:0 20px 40px rgba(50,120,200,0.15);border:4px solid white;cursor:pointer;aspect-ratio:16/9;background:#000;}
+.about-video-wrapper img{width:100%;height:100%;object-fit:cover;opacity:0.8;transition:0.3s;} 
+.about-video-wrapper:hover img{opacity:0.6;transform:scale(1.05);}
+.play-btn-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70px;height:70px;background:rgba(74,168,255,0.9);border-radius:50%;display:flex;justify-content:center;align-items:center;color:white;font-size:30px;padding-left:6px;box-shadow:0 10px 25px rgba(74,168,255,0.4);transition:0.2s;}
+.about-video-wrapper:hover .play-btn-icon{transform:translate(-50%,-50%) scale(1.1);background:#ff6b81;box-shadow:0 10px 25px rgba(255,107,129,0.4);}
+.video-iframe{width:100%;height:100%;border:none;display:none;outline:none;} 
+.video-desc{font-size:0.95rem;color:#555;margin-top:15px;font-weight:700;text-align:center;}
+
+section{padding:120px 7%;max-width:1200px;margin:0 auto;} 
+.section-title{text-align:center;margin-bottom:50px;} .section-title h2{font-size:2.2rem;margin-bottom:12px;color:#222;} .section-title p{color:#777;font-weight:500;}
+.card-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px;}
+.card{background:rgba(255,255,255,0.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:28px;padding:28px;box-shadow:0 10px 30px rgba(50,120,200,0.08);transition:0.25s;border:1px solid rgba(255,255,255,0.5);display:flex;flex-direction:column;}
+.card:hover{transform:translateY(-6px);box-shadow:0 15px 35px rgba(50,120,200,0.12);} .emoji{font-size:2.2rem;margin-bottom:16px;} .card h3{margin-bottom:14px;font-size:1.3rem;color:#2d5f88;} .card p{color:#666;line-height:1.9;flex-grow:1;margin-bottom:10px;}
+.btn-detail{margin-top:auto;background:#f0f7ff;color:#4aa8ff;padding:10px;border-radius:12px;font-weight:700;width:100%;text-align:center;display:block;border:none;cursor:pointer;transition:0.2s;} .btn-detail:hover{background:#4aa8ff;color:#fff;}
+.timeline{position:relative;max-width:800px;margin:0 auto;} .timeline::before{content:'';position:absolute;top:0;left:20px;height:100%;width:4px;background:linear-gradient(to bottom,#4aa8ff,#b0d8ff,#ff9aa7);border-radius:2px;}
+.timeline-item{position:relative;margin-bottom:30px;padding-left:60px;} .timeline-dot{position:absolute;left:12px;top:20px;width:20px;height:20px;background:white;border:4px solid #4aa8ff;border-radius:50%;} .timeline-date{font-weight:800;color:#4aa8ff;margin-bottom:8px;font-size:1.2rem;}
+.sns-container{background:white;border-radius:28px;padding:40px;text-align:center;box-shadow:0 10px 30px rgba(50,120,200,0.08);max-width:800px;margin:0 auto;}
+.btn-main{background:linear-gradient(135deg,#74c2ff,#4aa8ff);color:white;box-shadow:0 10px 25px rgba(74,168,255,0.28);padding:16px 28px;border-radius:18px;text-decoration:none;font-weight:700;transition:0.25s;display:inline-block;} .btn-main:hover{transform:translateY(-3px);}
+
+.content-card{position:relative;display:flex;flex-direction:column;justify-content:space-between; text-decoration: none; cursor: pointer;} 
+.content-badge{position:absolute;top:16px;right:16px;background:#ff6ec7;color:white;padding:8px 12px;border-radius:999px;font-size:0.8rem;font-weight:700;box-shadow:0 4px 10px rgba(255,110,199,0.3);}
+.btn-game{margin-top:auto;background:#222;color:#fff;text-align:center;width:100%;box-shadow:0 5px 15px rgba(0,0,0,0.1);padding:16px 28px;border-radius:18px;font-weight:700;transition:0.25s;display:block;font-size:1rem;} 
+.card:hover .btn-game{background:#4aa8ff;transform:translateY(-3px);box-shadow:0 8px 20px rgba(74,168,255,0.3);}
+
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);backdrop-filter:blur(5px);display:none;justify-content:center;align-items:center;z-index:10000;padding:20px;opacity:0;transition:0.3s;}
+.modal-content{background:white;border-radius:28px;width:100%;max-width:650px;max-height:85vh;overflow-y:auto;position:relative;box-shadow:0 20px 50px rgba(0,0,0,0.2);transform:translateY(20px);transition:0.3s;padding:40px 30px;text-align:center;}
+.modal-overlay.active{display:flex;opacity:1;} .modal-overlay.active .modal-content{transform:translateY(0);} .close-btn{position:absolute;top:15px;right:20px;background:#f0f0f0;border:none;width:36px;height:36px;border-radius:50%;font-size:18px;font-weight:bold;color:#555;cursor:pointer;transition:0.2s;} .close-btn:hover{background:#ff6b81;color:white;}
+.modal-hero-img{width:100%; aspect-ratio: 16 / 9; object-fit:contain; border-radius:16px; margin-bottom:20px; background:#eef6ff;} 
+.modal-title{font-size:1.8rem;color:#2d5f88;margin-bottom:15px;font-weight:800;} 
+.modal-desc{line-height:1.8;color:#555;text-align:left;margin-bottom:25px;padding:0 10px; white-space: pre-wrap;}
+.member-flex{display:flex;justify-content:center;gap:15px;flex-wrap:wrap;margin-top:10px;} .member-card{background:#f8fafc;padding:15px;border-radius:16px;width:135px;text-align:center;border:1px solid #e2e8f0;position:relative;}
+.leader-badge{position:absolute;top:-10px;right:-10px;background:#ff6b81;color:white;font-size:0.7rem;font-weight:bold;padding:4px 8px;border-radius:999px;box-shadow:0 2px 5px rgba(255,107,129,0.3);}
+.member-icon{width:55px;height:55px;background:#cbd5e1;border-radius:50%;margin:0 auto 10px auto;display:flex;align-items:center;justify-content:center;font-size:24px;} .member-name{font-weight:800;font-size:0.95rem;color:#333;} .member-role{font-size:0.75rem;color:#777;margin-top:4px;}
+footer{text-align:center;padding:40px 20px;color:#888;font-size:0.95rem;background:#fff;margin-top:50px;}
+
+#prof-container{position:fixed;bottom:20px;right:15px;z-index:50;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s;} 
+#prof-container:hover{transform:scale(1.05);} 
+#prof-avatar{width:160px; height:160px; object-fit:contain; object-position:bottom; filter:drop-shadow(0 8px 15px rgba(0,0,0,0.15));}
+
+#prof-bubble{background:#fff;border:3px solid #4aa8ff;border-radius:20px;padding:12px 16px;margin-bottom:12px;font-size:0.9rem;font-weight:800;color:#333;box-shadow:0 8px 20px rgba(74,168,255,0.2);position:relative;width:220px;box-sizing:border-box;text-align:left;line-height:1.6;}
+#prof-bubble::after,#prof-bubble::before{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border-style:solid;display:block;width:0;} #prof-bubble::before{border-width:13px 13px 0;border-color:#4aa8ff transparent transparent transparent;bottom:-13px;} #prof-bubble::after{border-width:9px 9px 0;border-color:#fff transparent transparent transparent;bottom:-9px;}
+
+.floating { animation: float 3s ease-in-out infinite; }
+@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+
+ruby { ruby-align: center; }
+rt { font-size: 0.65em; color: #666; font-weight: 700; transform: translateY(2px); }
+</style>
+</head>
+<body>
+<div class="blur-circle blue-main"></div><div class="blur-circle blue-sub"></div>
+<header>
+    <div class="logo"><a href="#" onclick="scrollToTop(event)">小澤ゼミ</a></div>
+    <nav>
+        <a href="#about" onclick="playNavSE()">About</a>
+        <a href="#organization" onclick="playNavSE()">Team</a>
+        <a href="#roadmap" onclick="playNavSE()">Schedule</a>
+        <a href="#sns" onclick="playNavSE()">Instagram</a>
+        <a href="#contents" onclick="playNavSE()">Contents</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-text">
+        <div class="mini-tag">2026年度 新入生特設サイト</div>
+        <h1>“考える”って、<br><span>こんなに面白い。</span></h1>
+        <p>小澤ゼミでは、社会問題・AI・経済・SNS・海外トレンドなどを自分たちの視点で分析しながら、「自分の言葉で論理を組み立てる力」を育てています。</p>
+    </div>
+</section>
+
+<section id="about">
+    <div class="section-title"><h2>About Us</h2><p>ただの飲みゼミじゃない。賢く遊ぶゼミ。</p></div>
+    
+    <div class="about-video-section">
+        <div class="about-video-wrapper" id="hero-video-container" onclick="playPromoVideo()">
+            <img id="video-thumbnail" src="picture/top-page/slideshow/thumbnail.png" alt="動画サムネイル">
+            <div id="video-play-btn" class="play-btn-icon">▶</div>
+            <video id="video-file" class="video-iframe" src="picture/top-page/slideshow/video.mp4" controls playsinline></video>
+        </div>
+        <p class="video-desc">🎥 15秒でわかる小澤ゼミ！動画で雰囲気をチェック</p>
+    </div>
+
+    <div class="card-wrap">
+        <div class="card"><div class="emoji">🧠</div><h3>思考力を鍛える</h3><p>単なる暗記ではなく、「なぜ？」を深掘りする。日常のニュースからグローバル経済まで、自分の視点で社会を分析します。</p></div>
+        <div class="card"><div class="emoji">🌍</div><h3>社会を多角的に見る</h3><p>Temuの裏側から、AIと人間の共存まで。幅広いテーマを扱いながら、ビジネスと倫理のジレンマを読み解きます。</p></div>
+        <div class="card"><div class="emoji">💼</div><h3>圧倒的なOBOG網</h3><p>金融・コンサル・メーカー・IT。多様な業界の第一線で活躍する先輩たちとの対話が、キャリアの視座を高めます。</p></div>
+    </div>
+</section>
+
+<section id="organization">
+    <div class="section-title"><h2>Our Team</h2><p>ゼミをひとつの「企業」として運営する</p></div>
+    <div class="card-wrap">
+        <div class="card"><div class="emoji">👑</div><h3>ゼミ長・副ゼミ長</h3><p>ゼミ全体の方向性を決定し、すべての進行を統括します。</p><button type="button" class="btn-detail" onclick="openModal('leader')">詳しく見る</button></div>
+        <div class="card"><div class="emoji">🏭</div><h3>企業・工場見学担当</h3><p>学問と実社会のリンクを創出。企業へのアポ取りを行います。</p><button type="button" class="btn-detail" onclick="openModal('factory')">詳しく見る</button></div>
+        <div class="card"><div class="emoji">📱</div><h3>SNS担当</h3><p>ゼミのブランド価値を高める精鋭チームです。</p><button type="button" class="btn-detail" onclick="openModal('sns')">詳しく見る</button></div>
+        <div class="card"><div class="emoji">🤝</div><h3>ゼミ紹介・選考担当</h3><p>新入生向けの説明会やゼミ連対応など、採用活動を担います。</p><button type="button" class="btn-detail" onclick="openModal('recruit')">詳しく見る</button></div>
+        <div class="card"><div class="emoji">💻</div><h3>記録担当</h3><p>議事録の作成や資料のアーカイブ化など、組織の土台作りを行います。</p><button type="button" class="btn-detail" onclick="openModal('web')">詳しく見る</button></div>
+        <div class="card"><div class="emoji">🏕️</div><h3>合宿担当</h3><p>春・夏合宿の企画手配を行います。「賢く遊ぶ」小澤ゼミのカルチャーを作る重要なポジションです。</p><button type="button" class="btn-detail" onclick="openModal('camp')">詳しく見る</button></div>
+        <div class="card"><div class="emoji">🎉</div><h3>OB/OG会担当</h3><p>OB/OG会・フェアウェルパーティのプロデュースを行います。縦の繋がりを強化する重要なポジションです。</p><button type="button" class="btn-detail" onclick="openModal('obog')">詳しく見る</button></div>
+    </div>
+</section>
+
+<section id="roadmap">
+    <div class="section-title"><h2>Yearly Roadmap</h2><p>充実した1年間のタイムライン</p></div>
+    <div class="timeline">
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">3月</div><div class="card"><h3>🌸 春合宿＆フェアウェルパーティ</h3><button type="button" class="btn-detail" onclick="openModal('march')">詳しく見る</button></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">春学期</div><div class="card"><h3>📖 基本のゼミ活動（前期）</h3><button type="button" class="btn-detail" onclick="openModal('spring_semester')">詳しく見る</button></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">6月</div><div class="card"><h3>🏭 工場見学＆OBOG座談会</h3><button type="button" class="btn-detail" onclick="openModal('june')">詳しく見る</button></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">7月</div><div class="card"><h3>🎉 発表会＆お疲れ様会</h3><p>前期の集大成となる発表会と、テスト前のご飯会を行います！</p></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">8月</div><div class="card"><h3>☀️ 夏休み</h3><p>各自の活動や準備に専念する期間です。</p></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">9月</div><div class="card"><h3>🏖️ 夏合宿</h3><button type="button" class="btn-detail" onclick="openModal('september')">詳しく見る</button></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">秋学期</div><div class="card"><h3>📝 基本のゼミ活動（後期）</h3><p>後期のメインイベントである合同ゼミに向けた準備や、4年生は卒論の本格的な執筆を進めます。</p></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">11月</div><div class="card"><h3>🤝 OBOG会＆ゼミリクルート</h3><button type="button" class="btn-detail" onclick="openModal('november')">詳しく見る</button></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">12月</div><div class="card"><h3>🎄 クリスマス会</h3><button type="button" class="btn-detail" onclick="openModal('december')">詳しく見る</button></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">1月</div><div class="card"><h3>🎓 合同ゼミ</h3><button type="button" class="btn-detail" onclick="openModal('january')">詳しく見る</button></div></div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">2月</div><div class="card"><h3>⛄ 冬休み</h3><p>次年度に向けた準備期間です。</p></div></div>
+    </div>
+</section>
+
+<section id="sns">
+    <div class="section-title">
+        <h2>Official Instagram</h2>
+        <p>ゼミの日常や活動風景はこちらから！</p>
+    </div>
+    <div class="sns-container" style="padding: 40px 30px; max-width: 600px; margin: 0 auto;">
+        <div class="emoji" style="font-size: 3rem; margin-bottom: 15px;">📷</div>
+        <h3 style="color:#4aa8ff; margin-bottom: 15px;">小澤ゼミナール 公式Instagram</h3>
+        <p style="color:#666; margin-bottom: 30px; line-height: 1.8; font-weight: 700; text-align: left;">
+            ゼミの日常やイベントの裏側、個性豊かなゼミ生の紹介などを発信しています。<br>
+            リアルな雰囲気を知りたい方は、ぜひ覗いてみてください！
+        </p>
+        <a href="https://www.instagram.com/ozawaseminar/" target="_blank" rel="noopener noreferrer" class="btn-main" onclick="playInstaSE()">Instagramを見に行く</a>
+    </div>
+</section>
+
+<section id="contents">
+    <div class="section-title"><h2>Interactive Contents</h2><p>ゼミ生が制作したオリジナルコンテンツ</p></div>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px;">
+        
+        <a href="zemi-shindan.html" class="card content-card" onclick="event.preventDefault(); playJumpAndGo(this.href)">
+            <div style="position: absolute; top: -15px; left: -15px; background: #ff6b81; color: white; padding: 5px 15px; border-radius: 99px; font-weight: 800; transform: rotate(-5deg); box-shadow: 0 4px 10px rgba(255,110,199,0.3); z-index: 10;">✨ まずはこれ！</div>
+            <div>
+                <div class="emoji">📝</div>
+                <h3 style="color:#2d5f88;">小澤ゼミ適性診断</h3>
+                <p>究極の二択に答えて、あなたの思考タイプを分析！あなたにぴったりのゼミ内の役割を診断します。</p>
+            </div>
+            <div class="btn-game">適性診断をうける！</div>
+        </a>
+
+        <a href="discussion.html" class="card content-card" onclick="event.preventDefault(); playJumpAndGo(this.href)">
+            <div>
+                <div class="emoji">🗣️</div>
+                <h3 style="color:#2d5f88;">ディスカッション体験</h3>
+                <p>過去のゼミでの議論を追体験！前提定義から結論まで、あなたならどの選択肢を選ぶ？小澤先生の評価はいかに！</p>
+            </div>
+            <div class="btn-game">議論を体験する！</div>
+        </a>
+
+        <a href="bs-balancer.html" class="card content-card" onclick="event.preventDefault(); playJumpAndGo(this.href)">
+            <div>
+                <div class="emoji">🎮</div>
+                <h3 style="color:#2d5f88;">貸借対照表バランサー！</h3>
+                <p>落ちてくる勘定科目を左右に瞬時に仕訳する、アクションパズル！君は第何期まで生き残れるか？</p>
+            </div>
+            <div class="btn-game">ゲームをプレイする！</div>
+        </a>
+
+        <a href="debate-battle.html" class="card content-card" onclick="event.preventDefault(); playJumpAndGo(this.href)">
+            <div>
+                <div class="emoji">⚔️</div>
+                <h3 style="color:#2d5f88;">ディベートバトル</h3>
+                <p>ディベート風のコマンドバトル！（※RPGではありません）チームで協力し、限られた発言権をやりくりして、ラスボス小澤先生を論破できるか！？</p>
+            </div>
+            <div class="btn-game">ディベートバトルへ！</div>
+        </a>
+
+    </div>
+</section>
+
+<footer>© 2026 小澤ゼミナール All Rights Reserved.<br><span style="font-size:0.8rem;">(This site is created by Zemi Members)</span></footer>
+
+<div id="prof-container" class="floating" onclick="talkToProf()">
+    <div id="prof-bubble">私が小澤<ruby>康裕<rt>みちひろ</rt></ruby>です。ようこそ小澤ゼミへ！まずは『ゼミ適性診断』をやってみてね。</div>
+    <img id="prof-avatar" src="picture/ozawasensei/ozawa_default.png" alt="小澤先生">
+</div>
+
+<div id="team-modal" class="modal-overlay" onclick="closeModalOnBg(event)">
+    <div class="modal-content">
+        <button type="button" class="close-btn" onclick="closeModal()">×</button>
+        <img id="modal-img" class="modal-hero-img" src="" alt="画像">
+        <h3 id="modal-title" class="modal-title">タイトル</h3><p id="modal-desc" class="modal-desc">説明</p>
+        <h4 id="modal-members-title" style="color:#4aa8ff;margin-top:20px;"></h4>
+        <div id="modal-members" class="member-flex"></div>
+    </div>
+</div>
+
+<script>
+const seJump = new Audio('sound/SE/jump.mp3'); 
+const seProfClick = new Audio('sound/SE/prof_click.mp3'); 
+const seModalOpen = new Audio('sound/SE/modal_open.mp3'); 
+const seBackTop = new Audio('sound/SE/back_top.mp3'); 
+const seInsta = new Audio('sound/SE/insta.mp3'); 
+
+// 🌟 修正：共通の再生関数で複製して鳴らす
+function playSE(audio) {
+    let soundClone = audio.cloneNode(true);
+    soundClone.volume = audio.volume || 1.0;
+    soundClone.play().catch(()=>{});
+}
+
+function playJumpAndGo(url) { 
+    playSE(seJump);
+    setTimeout(() => { window.location.href = url; }, 500); 
+}
+
+function playNavSE() { playSE(seModalOpen); }
+function playInstaSE() { playSE(seInsta); } 
+function scrollToTop(e) { 
+    e.preventDefault(); 
+    playSE(seBackTop); 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+} 
+
+function playPromoVideo() { 
+    document.getElementById('video-thumbnail').style.display = 'none'; 
+    document.getElementById('video-play-btn').style.display = 'none'; 
+    const video = document.getElementById('video-file'); 
+    video.style.display = 'block'; 
+    video.play(); 
+}
+
+const introMessage = { text: "私が小澤<ruby>康裕<rt>みちひろ</rt></ruby>です。ようこそ小澤ゼミへ！まずは『ゼミ適性診断』をやってみてね。", img: "picture/ozawasensei/ozawa_default.png" };
+
+const randomMessages = [
+    { text: "経営分析は、単なる数字遊びではないよ。", img: "picture/ozawasensei/ozawa_laugh.png" },
+    { text: "『賢く遊ぶ』。それがうちのゼミのモットーだ。", img: "picture/ozawasensei/ozawa_default.png" },
+    { text: "春合宿のプレゼン、君ならどう攻める？", img: "picture/ozawasensei/ozawa_laugh.png" },
+    { text: "議論の前提が間違っていれば、結論も必ず歪む。", img: "picture/ozawasensei/ozawa_angry.png" },
+    { text: "わからないことは恥ではない。考えないことが恥なのだよ。", img: "picture/ozawasensei/ozawa_default.png" },
+    { text: "ディベートバトルのラスボスは私らしいね。お手柔らかに頼むよ。", img: "picture/ozawasensei/ozawa_laugh.png" },
+    { text: "データアナリティクスも大事だが、最後は人間の『直感』が勝負を決める。", img: "picture/ozawasensei/ozawa_default.png" },
+    { text: "ただの飲みゼミじゃないからね！ディスカッションの準備はいいか？", img: "picture/ozawasensei/ozawa_angry.png" }
+];
+
+let isFirstClick = true;
+let currentRandomIndex = 0;
+let shuffledMessages = [];
+let lastMessageText = "";
+
+function shuffleMessages() {
+    shuffledMessages = [...randomMessages];
+    for (let i = shuffledMessages.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledMessages[i], shuffledMessages[j]] = [shuffledMessages[j], shuffledMessages[i]];
+    }
+    if (shuffledMessages.length > 1 && shuffledMessages[0].text === lastMessageText) {
+        [shuffledMessages[0], shuffledMessages[1]] = [shuffledMessages[1], shuffledMessages[0]];
+    }
+    currentRandomIndex = 0;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('prof-bubble').innerHTML = introMessage.text;
+    document.getElementById('prof-avatar').src = introMessage.img;
+    shuffleMessages();
+});
+
+function talkToProf() {
+    playSE(seProfClick);
+    const bubble = document.getElementById("prof-bubble"); 
+    const avatar = document.getElementById("prof-avatar");
+    
+    let msg;
+    if (isFirstClick) {
+        msg = shuffledMessages[currentRandomIndex];
+        isFirstClick = false;
+    } else {
+        currentRandomIndex++;
+        if (currentRandomIndex >= shuffledMessages.length) {
+            shuffleMessages();
+        }
+        msg = shuffledMessages[currentRandomIndex];
+    }
+    lastMessageText = msg.text;
+
+    bubble.innerHTML = msg.text; 
+    avatar.src = msg.img;
+
+    const container = document.getElementById("prof-container");
+    container.style.animation = 'none';
+    container.offsetHeight; 
+    container.style.animation = 'float 3s ease-in-out infinite';
+}
+
+const modalData = {
+    'leader': { type: 'team', title: "ゼミ長・副ゼミ長", desc: "ゼミの「社長」と「副社長」として、組織全体の方向性を決定し、すべてのプロジェクトの進行を統括します。メンバーのモチベーション管理から教授との連携まで、圧倒的なリーダーシップと調整力が求められるポジションです。", img: "picture/top-page/kakari-syoukai/zemicho-kakari.png", members: [{ name: "清水 葉瑠", role: "ゼミ長 / 3年", img: "picture/avatar-icon/shimizuharu.png", isLeader: false }, { name: "岡野 然", role: "副ゼミ長 / 3年", img: "picture/avatar-icon/okanozen.png", isLeader: false }, { name: "坂本 麻衣", role: "副ゼミ長 / 2年", img: "picture/avatar-icon/sakamotomai.png", isLeader: false }] },
+    'factory': { type: 'team', title: "企業・工場見学担当", desc: "学問と実社会のリンクを創出するメンバー。訪問先場所の選定、アポ取り、当日のスケジュール管理、その後のご飯会まで、楽しく学ぶ場を計画します。", img: "picture/top-page/kakari-syoukai/koujoukenngaku-kakari.png", members: [{ name: "及川 颯斗", role: "係長 / 3年", img: "picture/avatar-icon/oikawahayato.png", isLeader: true }, { name: "水越 圭吾", role: "3年", img: "picture/avatar-icon/mizukoshikeigo.png", isLeader: false }, { name: "佐藤 悠飛", role: "2年", img: "picture/avatar-icon/satouyuuhi.png", isLeader: false }] },
+    'sns': { type: 'team', title: "SNS担当", desc: "ゼミのブランド価値を高めるため戦略的にInstagram等を運用する精鋭チームです。アルゴリズムの分析、バズる企画の立案など実践的なマーケティングを学びます。", img: "picture/top-page/kakari-syoukai/sns-kakari.png", members: [{ name: "佐藤 弥", role: "係長 / 3年", img: "picture/avatar-icon/satouamane.png", isLeader: true }, { name: "野崎 美ら", role: "3年", img: "picture/avatar-icon/nozakichura.png", isLeader: false }, { name: "飯沼 美琴", role: "2年", img: "picture/avatar-icon/iinumamikoto.png", isLeader: false }, { name: "清水 柚菜", role: "2年", img: "picture/avatar-icon/shimizuyuuna.png", isLeader: false }] },
+    'recruit': { type: 'team', title: "ゼミ紹介・選考担当", desc: "未来のゼミ生を獲得するための採用チームです。新入生向けの説明会の企画・運営、ゼミ連との連携など、「小澤ゼミの魅力」を最大限に伝えるミッションを担います。", img: "picture/top-page/kakari-syoukai/opensemi-kakari.png", members: [{ name: "遠山 海音", role: "係長 / 3年", img: "picture/avatar-icon/tooyamakaito.png", isLeader: true }, { name: "梶谷 雪花", role: "2年", img: "picture/avatar-icon/kajitaniyukika.png", isLeader: false }, { name: "小波 祐元", role: "2年", img: "picture/avatar-icon/konamiyuuma.png", isLeader: false }] },
+    'web': { type: 'team', title: "記録担当", desc: "ゼミの活動を未来に残す大黒柱。議事録の作成や資料のアーカイブ化、サイトの管理など、組織のナレッジを蓄積・共有するための土台作りを行います。", img: "picture/top-page/kakari-syoukai/kiroku-kakari.png", members: [{ name: "田代 葵", role: "係長 / 3年", img: "picture/avatar-icon/tashiroaoi.png", isLeader: true }, { name: "田中 健太", role: "3年", img: "picture/avatar-icon/tanakakenta.png", isLeader: false }, { name: "横井 大誠", role: "2年", img: "picture/avatar-icon/yokoitaisei.png", isLeader: false }, { name: "東 泰生", role: "2年", img: "picture/avatar-icon/azumataiki.png", isLeader: false }] },
+    'camp': { type: 'team', title: "合宿担当", desc: "春・夏合宿の企画手配を行います。「賢く遊ぶ」小澤ゼミのカルチャーを作る重要なポジションです。", img: "picture/top-page/kakari-syoukai/gassyuku-kakari.png", members: [{ name: "佐藤 光亮", role: "係長 / 3年", img: "picture/avatar-icon/satoukousuke.png", isLeader: true }, { name: "近藤 行", role: "3年", img: "picture/avatar-icon/kondouiki.png", isLeader: false }, { name: "水谷 空磨", role: "2年", img: "picture/avatar-icon/mizutanikuuma.png", isLeader: false }, { name: "米田 樹生", role: "2年", img: "picture/avatar-icon/yonedaitsuki.png", isLeader: false }] },
+    'obog': { type: 'team', title: "OB/OG会担当", desc: "OB/OG会・フェアウェルパーティのプロデュースを行います。縦の繋がりを強化する重要なポジションです。", img: "picture/top-page/kakari-syoukai/obog-kakari.png", members: [{ name: "迫 木乃美", role: "係長 / 3年", img: "picture/avatar-icon/hasamakonomi.png", isLeader: true }, { name: "天野 日向子", role: "3年", img: "picture/avatar-icon/amanohinako.png", isLeader: false }, { name: "太宰 正清", role: "2年", img: "picture/avatar-icon/dazaimasakiyo.png", isLeader: false }] },
+    'march': { type: 'event', title: "🌸 春合宿＆フェアウェルパーティ", desc: "春合宿は1泊2日で、主に新2、3年生の顔合わせとして行っています。また、近い期間にはお世話になった4年生を送るフェアウェルパーティも行い、これまでの感謝を伝えるとともにゼミ全体の親睦を深めます。", img: "picture/top-page/event/harugassyuku.png" },
+    'spring_semester': { type: 'event', title: "📖 基本のゼミ活動（前期）", desc: "2、3年生の合同ディスカッションを中心にゼミが行われます。\nまた、2年生が財務会計論の輪読、3年生はプログラミング制作、\n4年生は卒論研究を行うなど、各学年の活動も本格化します。", img: "picture/top-page/event/zemikatudou.png" },
+    'june': { type: 'event', title: "🏭 工場見学＆OBOG座談会", desc: "今年は日本銀行貨幣博物館に行きました。\nその後はOBOGの方々から様々な話を聞き、多様な業界の空気を感じながらビジネスや社会の仕組みについて考える機会を設けます。", img: "picture/top-page/event/koujoukenngaku.png" },
+    'september': { type: 'event', title: "🏖️ 夏合宿", desc: "2泊3日で実施し、主にディスカッションを行います。\nさらに2年生は経営分析プレゼン、3年生は卒論のテーマ発表を行い、\n遊びも学びも全力で取り組む、楽しく充実した合宿です。", img: "picture/top-page/event/natsugassyuku.png" },
+    'november': { type: 'event', title: "🤝 OBOG会＆ゼミリクルート", desc: "6月の座談会とはまた違う形で、OBOG達と会食しながらたくさんお話しします。\nさらに、オープンゼミやゼミ面接といった1年生向けのゼミリクルートもあり、\n次の世代のゼミ生を決める非常に重要な期間です。", img: "picture/top-page/event/obogkai.png" },
+    'december': { type: 'event', title: "🎄 クリスマス会", desc: "クリスマスにちなんで、メンバー間でプレゼント交換を行います。\nその後、4年生の卒論発表を全員で聞き、来年度からの入会が決まった1年生を含んだ全員で会食をして、ゼミ全体の絆をさらに深めるイベントです。", img: "picture/top-page/event/xmas.png" },
+    'january': { type: 'event', title: "🎓 合同ゼミ", desc: "中央大学、関西学院大学のゼミと集まり、合同で開催されます。\n各学年で合同ゼミへ向け研究してきた内容を発表し合い、\n他校の学生との意見交換を通じて交流を深めます。", img: "picture/top-page/event/goudouzemi.png" }
+};
+
+function openModal(id) {
+    playSE(seModalOpen);
+    const data = modalData[id];
+    document.getElementById('modal-title').innerText = data.title; document.getElementById('modal-desc').innerText = data.desc; document.getElementById('modal-img').src = data.img;
+    const memberContainer = document.getElementById('modal-members'); const memberTitle = document.getElementById('modal-members-title'); memberContainer.innerHTML = '';
+    if (data.type === 'team') {
+        memberTitle.innerText = "担当メンバー";
+        data.members.forEach(m => {
+            const badgeHtml = m.isLeader ? `<div class="leader-badge">係長</div>` : '';
+            memberContainer.innerHTML += `<div class="member-card">${badgeHtml}<div class="member-icon" style="overflow:hidden; padding:0;"><img src="${m.img}" alt="${m.name}" style="width:100%;height:100%;object-fit:cover;"></div><div class="member-name">${m.name}</div><div class="member-role">${m.role}</div></div>`;
+        });
+    } else { memberTitle.innerText = ""; }
+    const modal = document.getElementById('team-modal'); modal.style.display = 'flex'; setTimeout(() => { modal.classList.add('active'); }, 10);
+    document.activeElement.blur();
+}
+
+function closeModal() { 
+    playSE(seBackTop);
+    const modal = document.getElementById('team-modal'); 
+    modal.classList.remove('active'); 
+    setTimeout(() => { modal.style.display = 'none'; }, 300); 
+    document.activeElement.blur();
+}
+
+function closeModalOnBg(e) { if (e.target.id === 'team-modal') closeModal(); }
+</script>
+</body>
+</html>

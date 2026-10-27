@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ゼミ適性診断</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+/* 画面全体を固定し、内部でスクロールさせる設計 */
+body { 
+    margin: 0; padding: 20px; height: 100vh; 
+    font-family: 'M PLUS Rounded 1c', "Helvetica Neue", sans-serif; 
+    background: linear-gradient(180deg, #f5fbff 0%, #fdf2ff 35%, #eefcff 100%); 
+    color: #374151; overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+
+.top-return-btn { position: fixed; top: 20px; left: 20px; background: rgba(255,255,255,0.9); color: #8b5cf6; padding: 10px 20px; border-radius: 99px; font-weight: 800; border: none; cursor: pointer; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(139,92,246,0.15); z-index: 1000; transition: 0.2s; display: inline-block; }
+.top-return-btn:hover { background: #8b5cf6; color: #fff; transform: scale(1.05); }
+
+.blur-circle { position: fixed; border-radius: 50%; filter: blur(90px); z-index: -2; opacity: 0.5; }
+.blue-main { width: 320px; height: 320px; background: #7cc7ff; top: -60px; left: -40px; }
+.pink-sub { width: 380px; height: 380px; background: #ff9aa7; bottom: -80px; right: -80px; }
+
+/* コンテナに最大高さを設定し、overflow-y: auto で内部スクロールを許可 */
+.container { 
+    width: 100%; max-width: 850px; padding: 50px 40px; border-radius: 32px; 
+    background: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 20px 50px rgba(139, 92, 246, 0.1); 
+    border: 2px solid rgba(255, 255, 255, 0.6); 
+    position: relative; z-index: 5;
+    max-height: 90vh; overflow-y: auto;
+}
+
+h1.main-title { 
+    text-align: center; font-size: clamp(2.8rem, 6vw, 4.5rem); font-weight: 900; margin: 0 0 20px; 
+    background: linear-gradient(90deg, #ff6ec7, #8b5cf6, #22d3ee, #fbbf24); 
+    background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+    text-shadow: 0 10px 30px rgba(139,92,246,0.15); line-height: 1.2;
+}
+
+#start button.start-btn { 
+    display: block; margin: 0 auto; padding: 20px 60px; border: none; border-radius: 999px; cursor: pointer; 
+    font-size: 1.4rem; font-weight: 900; color: #fff; 
+    background: linear-gradient(135deg, #ff6ec7, #8b5cf6, #22d3ee, #fbbf24); 
+    background-size: 250% 250%; animation: rainbow 6s ease infinite; 
+    box-shadow: 0 12px 35px rgba(139,92,246,0.3); transition: .2s; 
+}
+@keyframes rainbow{ 0%{background-position:left;} 50%{background-position:right;} 100%{background-position:left;} }
+#start button.start-btn:hover{ transform: translateY(-4px) scale(1.04); box-shadow: 0 15px 40px rgba(139,92,246,0.4); }
+
+.back-to-top-btn { display: block; margin: 0 auto; padding: 10px 24px; border: 1px solid #ddd; border-radius: 999px; background: #fff; color: #6b7280; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; width: max-content; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: 0.2s; }
+.back-to-top-btn:hover { background: #f9fafb; color: #374151; transform: translateY(-2px); }
+
+.bgm-selector { margin: 40px auto 40px auto; font-weight: 800; color: #555; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.arrow-btn { background: #fff; border: 2px solid #8b5cf6; color: #8b5cf6; border-radius: 50%; width: 42px; height: 42px; font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(139,92,246,0.1); }
+.arrow-btn:hover { background: #fdf4ff; transform: scale(1.1); }
+.arrow-btn:active { transform: scale(0.9); }
+
+#progress{ text-align:right; margin-bottom:8px; font-weight:800; color:#a855f7; font-size:.95rem; }
+.progress-wrap{ width:100%; height:14px; background:#f3e8ff; border-radius:999px; overflow:hidden; margin-bottom:24px; }
+.progress-bar{ width:0%; height:100%; border-radius:999px; background:linear-gradient(90deg,#22d3ee,#8b5cf6,#ff6ec7,#fbbf24); background-size:200% 100%; animation:move 4s linear infinite; transition:.4s ease; }
+@keyframes move{ from{background-position:left;} to{background-position:right;} }
+#question{ background:linear-gradient(135deg,#fff7ed,#fdf4ff,#eff6ff); border-radius:24px; padding:28px 20px; text-align:center; font-size:1.7rem; line-height:1.4; margin-bottom:24px; box-shadow:0 10px 24px rgba(0,0,0,0.06); animation:pop .4s ease; }
+@keyframes pop{ 0%{ opacity:0; transform:scale(.88) translateY(10px); } 70%{ transform:scale(1.03); } 100%{ opacity:1; transform:scale(1); } }
+
+.answer-buttons{ display:flex; justify-content:center; gap:8px; width:100%; }
+.answer-buttons button{ flex:1; border:none; border-radius:18px; min-height:72px; cursor:pointer; font-weight:800; color:#fff; transition:.2s; padding:8px 4px; box-shadow:0 6px 14px rgba(0,0,0,0.08); }
+.think-yes{ background:linear-gradient(135deg,#ff6ec7,#f97316,#fbbf24); } .think-mid{ background:linear-gradient(135deg,#8b5cf6,#22d3ee); } .think-no{ background:linear-gradient(135deg,#60a5fa,#2563eb); }
+.big{ flex:1.3; font-size:1rem; } .medium{ flex:1.05; font-size:.85rem; } .small{ flex:.9; font-size:.75rem; }
+.answer-buttons button:hover{ transform:translateY(-4px) scale(1.03); box-shadow:0 10px 20px rgba(0,0,0,0.12); }
+.answer-buttons button.selected{ outline:3px solid #fff; transform:scale(1.05); }
+
+#result{ text-align:center; }
+.result-image{ width:240px; height:240px; object-fit:cover; border-radius:32px; margin-bottom:24px; box-shadow:0 14px 28px rgba(0,0,0,0.12); background:#f3f4f6; }
+#type{ font-size:2.4rem; margin-bottom:12px; font-weight: 900; color: #2d5f88; }
+#description{ font-size:1.05rem; line-height:1.8; color:#4b5563; margin-bottom: 30px; padding: 0 20px; }
+
+.same-type-members-wrap { margin-bottom: 35px; padding: 25px; border-radius: 24px; background: rgba(139,92,246,0.05); border: 1px dashed rgba(139,92,246,0.3); display: none; }
+.same-type-title { font-size: 1.1rem; font-weight: 800; color: #8b5cf6; margin-bottom: 15px; text-align: center; }
+.member-faces { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.member-face-item { text-align: center; }
+.member-face-img { width: 75px; height: 75px; border-radius: 50%; object-fit: cover; background: #fff; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px; }
+.member-face-name { font-size: 0.85rem; font-weight: 800; color: #555; line-height: 1.3; }
+
+.prof-bubble-large { 
+    background: rgba(255, 255, 255, 0.95); border: 3px solid #4aa8ff; border-radius: 20px; padding: 12px 16px; font-size: 0.9rem; font-weight: 800; color: #333; box-shadow: 0 10px 25px rgba(74,168,255,0.25); position: relative; text-align: left; line-height: 1.6; display: inline-block; margin-bottom: 15px; cursor: pointer; user-select: none; width: 220px; box-sizing: border-box;
+}
+.prof-bubble-large::after, .prof-bubble-large::before { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-style: solid; width: 0; }
+.prof-bubble-large::before { border-width: 12px 12px 0; border-color: #4aa8ff transparent transparent transparent; bottom: -12px; } 
+.prof-bubble-large::after { border-width: 8px 8px 0; border-color: rgba(255,255,255,0.95) transparent transparent transparent; bottom: -8px; }
+
+#ozawa-wrapper { 
+    position: fixed; bottom: 20px; right: 15px; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; transition: 0.2s;
+}
+#ozawa-wrapper:hover { transform: scale(1.05); }
+#ozawa-img { width: 240px; height: 240px; object-fit: contain; object-position: bottom; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15)); }
+@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+</style>
+</head>
+
+<body>
+<button type="button" onclick="playBackTopAndGo('index.html')" class="top-return-btn" id="top-return-btn">← トップページに戻る</button>
+
+<div class="blur-circle blue-main"></div>
+<div class="blur-circle pink-sub"></div>
+
+<div id="ozawa-wrapper" onclick="talkToProf()" style="animation: float 3s ease-in-out infinite;">
+    <div id="ozawa-bubble" class="prof-bubble-large">君の強みを見つけてみよう！</div>
+    <img id="ozawa-img" src="picture/ozawasensei/ozawa_default.png" alt="小澤先生">
+</div>
+
+<div class="container">
+    <div id="start">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <span style="display:inline-block; background:rgba(139,92,246,0.1); color:#8b5cf6; padding:8px 20px; border-radius:99px; font-weight:900; font-size:1.05rem; margin-bottom:20px; border:2px dashed rgba(139,92,246,0.4); box-shadow: 0 4px 10px rgba(139,92,246,0.1);">君の強みを分析！</span>
+            <h1 class="main-title">ゼミ適性診断</h1>
+            <p style="font-size: 1.3rem; font-weight: 800; color: #555; margin-bottom: 10px;">直感で答えて、<br>ゼミでのあなたの役割を見つけ出そう！</p>
+        </div>
+
+        <div class="bgm-selector">
+            <label style="font-size: 1.05rem; color: #888;">BGMプレイリスト</label>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button type="button" class="arrow-btn" onclick="changeBgm(-1)">◀</button>
+                <div id="bgm-display" style="font-size: 1.6rem; font-weight: 900; color: #8b5cf6; width: 60px; text-align: center;">1</div>
+                <button type="button" class="arrow-btn" onclick="changeBgm(1)">▶</button>
+            </div>
+        </div>
+
+        <button type="button" class="start-btn" onclick="startTest()">診断スタート！</button>
+    </div>
+
+    <div id="quiz" style="display:none;">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 15px;">
+            <button type="button" class="back-to-top-btn" style="margin: 0; padding: 6px 16px; font-size: 0.85rem;" onclick="interruptTest()">⏸ やめる</button>
+            <button type="button" class="back-to-top-btn" id="btn-goback" style="margin: 0; padding: 6px 16px; font-size: 0.85rem;" onclick="goBack()">↩ 一つ前に戻る</button>
+        </div>
+        <div id="progress"></div>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        <h2 id="question"></h2>
+        <div class="answer-buttons">
+            <button type="button" class="big think-yes" onclick="selectButton(this); answer(5)">とてもそう思う</button>
+            <button type="button" class="medium think-yes" onclick="selectButton(this); answer(4)">そう思う</button>
+            <button type="button" class="small think-mid" onclick="selectButton(this); answer(3)">どちらでも</button>
+            <button type="button" class="medium think-no" onclick="selectButton(this); answer(2)">思わない</button>
+            <button type="button" class="big think-no" onclick="selectButton(this); answer(1)">全く思わない</button>
+        </div>
+    </div>
+
+    <div id="result" style="display:none;">
+        <img id="resultImage" class="result-image" src="" alt="キャラクター画像">
+        <h1 id="type" style="text-align: center;"></h1>
+        <p id="description" style="text-align: center;"></p>
+
+        <div id="same-type-members" class="same-type-members-wrap">
+            <div id="same-type-title-text" class="same-type-title">✨ 同じタイプのゼミメンバー ✨</div>
+            <div id="member-faces-container" class="member-faces">
+            </div>
+        </div>
+
+        <button type="button" class="back-to-top-btn" onclick="resetTest()" style="border: 2px solid #8b5cf6; color: #8b5cf6; background: rgba(139,92,246,0.05);">
+            🔄 もう一度診断する（タイトルへ）
+        </button>
+    </div>
+</div>
+
+<script>
+const seStart = new Audio('sound/SE/start.mp3');
+const seSelect = new Audio('sound/SE/select.mp3');
+const seClear = new Audio('sound/SE/clear.mp3');
+const seBackStart = new Audio('sound/SE/back_start.mp3');
+const seBackTop = new Audio('sound/SE/back_top.mp3');
+const seProfClick = new Audio('sound/SE/prof_click.mp3');
+const seReset = new Audio('sound/SE/reset.mp3');
+const seModalOpen = new Audio('sound/SE/modal_open.mp3'); 
+
+let currentBgmIndex = 1;
+const bgm = new Audio(`sound/BGM/zemi-shindan/zemi-shindan_${currentBgmIndex}.mp3`);
+bgm.loop = true;
+bgm.volume = 0.4;
+
+let isExiting = false;
+
+// 🌟 修正：音声をクローンして再生することで、連続クリック時の途切れを防止
+function playSE(audio) {
+    if (isExiting && audio !== seBackTop) return;
+    let soundClone = audio.cloneNode(true);
+    soundClone.volume = audio.volume || 1.0;
+    soundClone.play().catch(()=>{});
+}
+
+function playBackTopAndGo(url) {
+    isExiting = true; 
+    bgm.pause(); 
+    playSE(seBackTop);
+    setTimeout(() => { window.location.href = url; }, 400);
+}
+
+window.changeBgm = function(dir) {
+    playSE(seModalOpen);
+    currentBgmIndex += dir;
+    if (currentBgmIndex > 5) currentBgmIndex = 1;
+    if (currentBgmIndex < 1) currentBgmIndex = 5;
+    
+    const disp = document.getElementById('bgm-display');
+    if (currentBgmIndex === 5) {
+        disp.innerText = "なし";
+        bgm.pause();
+    } else {
+        disp.innerText = currentBgmIndex;
+        const wasPlaying = !bgm.paused;
+        bgm.src = `sound/BGM/zemi-shindan/zemi-shindan_${currentBgmIndex}.mp3`;
+        if (wasPlaying && document.getElementById("quiz").style.display === "block") {
+            bgm.play().catch(e => console.log("BGM play failed", e));
+        }
+    }
+};
+
+const questions=[
+{text:"議論ではまず自分の意見を出す",axis:"discussion"},{text:"発言前に根拠や論理を整理したい",axis:"analysis",reverse:true},{text:"深く考えることが得意",axis:"analysis",reverse:true},{text:"アイデアを広げる役になりやすい",axis:"discussion"},{text:"資料やデータの違和感に気づく",axis:"analysis",reverse:true},{text:"新しいツールやAIは試したくなる",axis:"challenge"},{text:"リスクを考え慎重に進めたい",axis:"stable",reverse:true},{text:"まず行動することを重視する",axis:"challenge"},{text:"慣れた方法が安心",axis:"stable",reverse:true},{text:"前例がないことにワクワクする",axis:"challenge"}
+];
+
+const ozawaAnswers = [4,4,4,4,4,5,5,3,3,4];
+
+// 🌟 修正：提供された画像の内容に従い、全38名のゼミ生のタイプ指定を最新版に更新
+const zemiMembers = [
+    { name: "東 泰生", furigana: "あずまたいき", grade: "2年", type: "ロジカルりす", img: "picture/avatar-icon/azumataiki.png" },
+    { name: "飯沼 美琴", furigana: "いいぬまみこと", grade: "2年", type: "ロジカルりす", img: "picture/avatar-icon/iinumamikoto.png" },
+    { name: "梶谷 雪花", furigana: "かじたにゆきか", grade: "2年", type: "お世話いぬ", img: "picture/avatar-icon/kajitaniyukika.png" },
+    { name: "小波 祐元", furigana: "こなみゆうま", grade: "2年", type: "ロジカルりす", img: "picture/avatar-icon/konamiyuuma.png" },
+    { name: "坂本 麻衣", furigana: "さかもとまい", grade: "2年", type: "ロジカルりす", img: "picture/avatar-icon/sakamotomai.png" },
+    { name: "佐藤 悠飛", furigana: "さとうゆうひ", grade: "2年", type: "ロジカルりす", img: "picture/avatar-icon/satouyuuhi.png" },
+    { name: "清水 柚菜", furigana: "しみずゆうな", grade: "2年", type: "お世話いぬ", img: "picture/avatar-icon/shimizuyuuna.png" },
+    { name: "太宰 正清", furigana: "だざいまさきよ", grade: "2年", type: "ロジカルりす", img: "picture/avatar-icon/dazaimasakiyo.png" },
+    { name: "水谷 空磨", furigana: "みずたにくうま", grade: "2年", type: "わくわくうさぎ", img: "picture/avatar-icon/mizutanikuuma.png" },
+    { name: "横井 大誠", furigana: "よこいたいせい", grade: "2年", type: "ロジカルりす", img: "picture/avatar-icon/yokoitaisei.png" },
+    { name: "米田 樹生", furigana: "よねだいつき", grade: "2年", type: "リーダーライオン", img: "picture/avatar-icon/yonedaitsuki.png" },
+    { name: "天野 日向子", furigana: "あまのひなこ", grade: "3年", type: "ロジカルりす", img: "picture/avatar-icon/amanohinako.png" },
+    { name: "及川 颯斗", furigana: "おいかわはやと", grade: "3年", type: "リーダーライオン", img: "picture/avatar-icon/oikawahayato.png" },
+    { name: "岡野 然", furigana: "おかのぜん", grade: "3年", type: "リーダーライオン", img: "picture/avatar-icon/okanozen.png" },
+    { name: "近藤 行", furigana: "こんどういき", grade: "3年", type: "わくわくうさぎ", img: "picture/avatar-icon/kondouiki.png" },
+    { name: "佐藤 弥", furigana: "さとうあまね", grade: "3年", type: "ロジカルりす", img: "picture/avatar-icon/satouamane.png" },
+    { name: "佐藤 光亮", furigana: "さとうこうすけ", grade: "3年", type: "わくわくうさぎ", img: "picture/avatar-icon/satoukousuke.png" },
+    { name: "清水 葉瑠", furigana: "しみずはる", grade: "3年", type: "リーダーライオン", img: "picture/avatar-icon/shimizuharu.png" },
+    { name: "田代 葵", furigana: "たしろあおい", grade: "3年", type: "ロジカルりす", img: "picture/avatar-icon/tashiroaoi.png" },
+    { name: "田中 健太", furigana: "たなかけんた", grade: "3年", type: "ロジカルりす", img: "picture/avatar-icon/tanakakenta.png" },
+    { name: "遠山 海音", furigana: "とおやまかいと", grade: "3年", type: "お世話いぬ", img: "picture/avatar-icon/tooyamakaito.png" },
+    { name: "野崎 美ら", furigana: "のざきちゅら", grade: "3年", type: "お世話いぬ", img: "picture/avatar-icon/nozakichura.png" },
+    { name: "迫 木乃美", furigana: "はさまこのみ", grade: "3年", type: "ロジカルりす", img: "picture/avatar-icon/hasamakonomi.png" },
+    { name: "水越 圭吾", furigana: "みずこしけいご", grade: "3年", type: "ロジカルりす", img: "picture/avatar-icon/mizukoshikeigo.png" },
+    { name: "アン ジュンヒョク", furigana: "あんじゅんひょく", grade: "4年", type: "リーダーライオン", img: "picture/avatar-icon/ahnjunhyeok.png" },
+    { name: "荒川 珠希", furigana: "あらかわたまき", grade: "4年", type: "お世話いぬ", img: "picture/avatar-icon/arakawatamaki.png" },
+    { name: "岡島 彩乃", furigana: "おかじまあやの", grade: "4年", type: "リーダーライオン", img: "picture/avatar-icon/okajimaayano.png" },
+    { name: "川崎 靖代", furigana: "かわさきやすよ", grade: "4年", type: "ロジカルりす", img: "picture/avatar-icon/kawasakiyasuyo.png" },
+    { name: "チョウ キム ロン", furigana: "ちょうきむろん", grade: "4年", type: "ロジカルりす", img: "picture/avatar-icon/truongkimlong.png" },
+    { name: "権 瑜秦", furigana: "けんゆじん", grade: "4年", type: "わくわくうさぎ", img: "picture/avatar-icon/kenyujin.png" },
+    { name: "島田 優芽", furigana: "しまだゆめ", grade: "4年", type: "ロジカルりす", img: "picture/avatar-icon/shimadayume.png" },
+    { name: "中村 沙耶", furigana: "なかむらさや", grade: "4年", type: "お世話いぬ", img: "picture/avatar-icon/nakamurasaya.png" },
+    { name: "原田 拓実", furigana: "はらだたくみ", grade: "4年", type: "わくわくうさぎ", img: "picture/avatar-icon/haradatakumi.png" },
+    { name: "逸見 咲羽", furigana: "へんみさわ", grade: "4年", type: "わくわくうさぎ", img: "picture/avatar-icon/henmisawa.png" },
+    { name: "細川 大翔", furigana: "ほそかわたいせい", grade: "4年", type: "リーダーライオン", img: "picture/avatar-icon/hosokawataisei.png" },
+    { name: "三根 蔵呂人", furigana: "みねくろうど", grade: "4年", type: "ロジカルりす", img: "picture/avatar-icon/minekuroudo.png" },
+    { name: "宮田 結季", furigana: "みやたゆき", grade: "4年", type: "わくわくうさぎ", img: "picture/avatar-icon/miyatayuki.png" },
+    { name: "吉田 晴子", furigana: "よしだはるこ", grade: "4年", type: "ロジカルりす", img: "picture/avatar-icon/yoshidaharuko.png" }
+];
+
+let current=0; let discussionScore=0; let challengeScore=0;
+let scoreHistory = []; 
+
+let currentShindanState = "start";
+let shindanInitialMsg = {};
+let shindanRandomPool = [];
+let shindanMsgIndex = -1;
+let lastShindanMessageText = "";
+
+function updateOzawa(state, type="") {
+    currentShindanState = state;
+    if (state === "quiz") {
+        shindanInitialMsg = {text: "直感で答えるのがポイントだ！", img: "picture/ozawasensei/ozawa_default.png"};
+        shindanRandomPool = [
+            {text: "ふむふむ…なるほど。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "自分の頭で考えるんだ！", img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "その調子だ！どんどん進もう。", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "飲みゼミじゃない、賢く遊ぶゼミだよ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "君はリーダー気質かな？それともサポーター？", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "迷ったら、最初の直感を信じるんだ。", img: "picture/ozawasensei/ozawa_laugh.png"}
+        ];
+    } else if (state === "result") {
+        if (type === "小澤康裕") {
+            shindanInitialMsg = {text: "私と全く同じ思考とは…君にはゼミを任せたよ！", img: "picture/ozawasensei/ozawa_laugh.png"};
+            shindanRandomPool = [ {text: "私と全く同じ思考とは…君にはゼミを任せたよ！", img: "picture/ozawasensei/ozawa_laugh.png"} ];
+        } else {
+            shindanInitialMsg = {text: `おめでとう！君は「${type}」だ！`, img: "picture/ozawasensei/ozawa_laugh.png"};
+            shindanRandomPool = [
+                {text: "この結果をゼミ選びの参考にしてみてね！", img: "picture/ozawasensei/ozawa_default.png"},
+                {text: "どんな強みもゼミでは必要不可欠な要素なんだ。", img: "picture/ozawasensei/ozawa_laugh.png"},
+                {text: "トップページから他のコンテンツも遊んでみてね！", img: "picture/ozawasensei/ozawa_default.png"},
+                {text: "同じタイプの先輩に話を聞いてみるのもいいぞ。", img: "picture/ozawasensei/ozawa_laugh.png"}
+            ];
+        }
+    } else {
+        shindanInitialMsg = {text: "君の強みを見つけてみよう！", img: "picture/ozawasensei/ozawa_default.png"};
+        shindanRandomPool = [
+            {text: "ゼミでどんな役割が合うかズバリ診断するぞ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "素直に、深く考えずに答えるのがコツだ。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "クリックするとセリフが変わるぞ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "トップページには他にもコンテンツがあるよ。", img: "picture/ozawasensei/ozawa_default.png"}
+        ];
+    }
+    
+    shuffleShindanPool();
+    shindanMsgIndex = -1;
+    applyOzawaMsg();
+}
+
+function shuffleShindanPool() {
+    for (let i = shindanRandomPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shindanRandomPool[i], shindanRandomPool[j]] = [shindanRandomPool[j], shindanRandomPool[i]];
+    }
+    if (shindanRandomPool.length > 1 && shindanRandomPool[0].text === lastShindanMessageText) {
+        [shindanRandomPool[0], shindanRandomPool[1]] = [shindanRandomPool[1], shindanRandomPool[0]];
+    }
+}
+
+function talkToProf() {
+    playSE(seProfClick);
+    shindanMsgIndex++;
+    if (shindanMsgIndex >= shindanRandomPool.length) {
+        shuffleShindanPool();
+        shindanMsgIndex = 0;
+    }
+    applyOzawaMsg();
+}
+
+function applyOzawaMsg() {
+    let data = shindanMsgIndex === -1 ? shindanInitialMsg : shindanRandomPool[shindanMsgIndex];
+    const bubble = document.getElementById("ozawa-bubble"); 
+    const img = document.getElementById("ozawa-img");
+
+    lastShindanMessageText = data.text;
+    bubble.innerHTML = data.text;
+    img.src = data.img;
+
+    bubble.style.animation = 'none';
+    bubble.offsetHeight; 
+    bubble.style.animation = 'float 3s ease-in-out infinite';
+}
+
+function startTest(){
+    playSE(seStart);
+    document.getElementById("top-return-btn").style.display = "none";
+    if (currentBgmIndex !== 5) {
+        bgm.currentTime = 0;
+        bgm.play().catch(e => console.log("BGM play failed", e));
+    }
+    current = 0; discussionScore = 0; challengeScore = 0; scoreHistory = [];
+    document.getElementById("start").style.display="none"; document.getElementById("result").style.display="none"; document.getElementById("quiz").style.display="block";
+    showQuestion();
+}
+
+function showQuestion() {
+    document.getElementById("btn-goback").style.visibility = (current === 0) ? "hidden" : "visible";
+    document.getElementById("question").textContent=questions[current].text;
+    document.getElementById("progress").textContent=`${current+1} / ${questions.length}`;
+    const progress=(current / questions.length) * 100; document.getElementById("progressBar").style.width=progress+"%";
+    const q=document.getElementById("question"); q.style.animation="none"; q.offsetHeight; q.style.animation="pop .4s ease";
+    document.querySelectorAll(".answer-buttons button").forEach(b=>b.classList.remove("selected"));
+    updateOzawa("quiz");
+}
+
+function selectButton(btn){
+    document.querySelectorAll(".answer-buttons button").forEach(b=>b.classList.remove("selected")); btn.classList.add("selected");
+}
+
+function answer(point){
+    playSE(seSelect); 
+    scoreHistory.push({ discussion: discussionScore, challenge: challengeScore, answerPoint: point }); 
+    const q=questions[current]; if(q.reverse) point=6-point;
+    if(q.axis==="discussion"||q.axis==="analysis"){ discussionScore+=point; }
+    if(q.axis==="challenge"||q.axis==="stable"){ challengeScore+=point; }
+    current++;
+    if(current < questions.length){ setTimeout(showQuestion, 160); }
+    else{ document.getElementById("progressBar").style.width="100%"; document.getElementById("progress").textContent=`${questions.length} / ${questions.length}`; setTimeout(showResult, 250); }
+}
+
+function goBack() {
+    if (current === 0) return;
+    playSE(seBackTop);
+    current--;
+    const lastState = scoreHistory.pop();
+    discussionScore = lastState.discussion;
+    challengeScore = lastState.challenge;
+    showQuestion();
+}
+
+function interruptTest() {
+    playSE(seReset);
+    setTimeout(() => {
+        if(confirm("本当にスタート画面に戻りますか？\n現在の診断状況は失われます。")){
+            bgm.pause(); 
+            playSE(seBackStart);
+            document.getElementById("quiz").style.display="none";
+            document.getElementById("start").style.display="block";
+            document.getElementById("top-return-btn").style.display="inline-block";
+            updateOzawa("start");
+        } else {
+            playSE(seBackTop);
+        }
+    }, 50);
+}
+
+function showResult(){
+    bgm.pause(); 
+    playSE(seClear); 
+    document.getElementById("quiz").style.display="none"; document.getElementById("result").style.display="block";
+    const isOzawa = scoreHistory.length === 10 && scoreHistory.every((h, i) => h.answerPoint === ozawaAnswers[i]);
+    const discussionType=discussionScore>=15; const challengeType=challengeScore>=15;
+    let type=""; let description=""; let image="";
+    const typeEl = document.getElementById("type");
+    if (isOzawa) {
+        type = "小澤康裕";
+        description = "素晴らしい！なんとすべての質問に対する選択が小澤先生と100%完全一致しました！君の思考ロジックは小澤先生そのもの、まさに『歩く大論破王』です。今すぐゼミの主宰を交代するか、教授の座を譲り受ける準備を始めましょう！";
+        image = "picture/ozawasensei/ozawa_laugh.png";
+        typeEl.style.background = "linear-gradient(90deg, #ff6ec7, #8b5cf6, #22d3ee, #fbbf24)";
+        typeEl.style.webkitBackgroundClip = "text";
+        typeEl.style.webkitTextFillColor = "transparent";
+        typeEl.style.textShadow = "0 8px 20px rgba(139,92,246,0.3)";
+    } else {
+        typeEl.style.background = "none";
+        typeEl.style.webkitBackgroundClip = "unset";
+        typeEl.style.webkitTextFillColor = "initial";
+        typeEl.style.color = "#2d5f88";
+        typeEl.style.textShadow = "none";
+        if(discussionType&&challengeType){ type="わくわくうさぎ"; description="新しいことに積極的に挑戦できるタイプ！アイデア豊富で行動力抜群、ゼミのイノベーションを引っ張る存在です。"; image="picture/type/usagi.png"; }
+        else if(discussionType&&!challengeType){ type="お世話いぬ"; description="周囲を支えながらみんなをまとめるタイプ！高いコミュニケーション能力でゼミ内の調整やチームワークを円滑にします。"; image="picture/type/inu.png"; }
+        else if(!discussionType&&challengeType){ type="リーダーライオン"; description="論理的に考えて戦略を立てるタイプ！冷静な分析力と強い意志で、前例のない課題に対しても的確なロードマップを描きます。"; image="picture/type/lion.png"; }
+        else{ type="ロジカルりす"; description="慎重に分析しながら研究を支えるタイプ！データの違和感を見逃さず、緻密な資料作成や堅実な議論の土台を作ってくれます。"; image="picture/type/risu.png"; }
+    }
+    document.getElementById("type").textContent=type; document.getElementById("description").textContent=description; document.getElementById("resultImage").src=image;
+    const sameTypeContainer = document.getElementById("same-type-members");
+    const titleTextEl = document.getElementById("same-type-title-text");
+    const facesContainer = document.getElementById("member-faces-container");
+    facesContainer.innerHTML = ""; 
+    if (isOzawa) {
+        sameTypeContainer.style.display = "block";
+        titleTextEl.textContent = "✨ 同じタイプのゼミメンバー ✨";
+        facesContainer.innerHTML = "<p style='color: #888; font-weight: 700; font-size: 0.95rem; margin: 10px 0;'>現在このタイプに所属するゼミ生はいません。<br>君が最初の『小澤先生タイプ』だ！</p>";
+    } else {
+        titleTextEl.textContent = "✨ 同じタイプのゼミメンバー ✨";
+        const sameMembers = zemiMembers.filter(m => m.type === type);
+        if (sameMembers.length > 0) {
+            sameTypeContainer.style.display = "block";
+            sameMembers.forEach(m => {
+                const div = document.createElement("div");
+                div.className = "member-face-item";
+                const imgEl = document.createElement("img");
+                imgEl.className = "member-face-img";
+                imgEl.src = m.img; imgEl.alt = m.name;
+                const nameEl = document.createElement("div");
+                nameEl.className = "member-face-name";
+                nameEl.innerHTML = `${m.name}<br><span style="font-size: 0.7rem; color: #888;">(${m.grade})</span>`;
+                div.appendChild(imgEl); div.appendChild(nameEl); facesContainer.appendChild(div);
+            });
+        } else { sameTypeContainer.style.display = "none"; }
+    }
+    updateOzawa("result", type);
+}
+
+function resetTest() {
+    playSE(seBackStart); 
+    document.getElementById("result").style.display="none"; 
+    document.getElementById("start").style.display="block";
+    document.getElementById("top-return-btn").style.display="inline-block";
+    updateOzawa("start");
+}
+
+updateOzawa("start");
+</script>
+</body>
+</html>

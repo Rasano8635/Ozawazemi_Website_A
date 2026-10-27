@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ディベートバトル | 小澤ゼミナール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{font-family:'M PLUS Rounded 1c',sans-serif;background:linear-gradient(180deg,#f5fbff 0%,#eef6ff 35%,#f7faff 100%);color:#333;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+.blur-circle{position:fixed;border-radius:50%;filter:blur(90px);z-index:-1;opacity:.45}
+.blue-main{width:300px;height:300px;background:#7cc7ff;top:-50px;left:-50px}
+.blue-sub{width:350px;height:350px;background:#b0d8ff;bottom:-50px;right:-50px}
+
+.top-return-btn{position:fixed;top:20px;left:20px;background:rgba(255,255,255,.9);color:#4aa8ff;padding:10px 20px;border-radius:99px;font-weight:800;border:none;cursor:pointer;font-size:1rem;box-shadow:0 4px 15px rgba(74,168,255,.15);z-index:1000;transition:.2s;text-decoration:none;display:inline-block}
+.top-return-btn:hover{background:#4aa8ff;color:#fff;transform:scale(1.05)}
+.interrupt-btn{position:fixed;top:20px;left:20px;background:#fff;color:#ff6b81;padding:10px 20px;border-radius:99px;font-weight:800;border:2px solid #ff6b81;cursor:pointer;font-size:1rem;box-shadow:0 4px 15px rgba(255,107,129,.15);z-index:1000;transition:.2s;display:none;}
+.interrupt-btn:hover{background:#fff0f2;transform:scale(1.05)}
+
+.game-container {
+    width: 1100px; height: 800px; max-height: 95vh; background: rgba(255,255,255,.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 2px solid rgba(255,255,255,.9); border-radius: 30px; box-shadow: 0 20px 50px rgba(74,168,255,.15); display: flex; flex-direction: column; position: relative; overflow: visible; margin: auto;
+}
+.game-container.start-mode { width: 650px; height: auto; min-height: 640px; }
+.screen{width:100%;height:100%;display:none;padding:25px 30px;flex-direction:column;position:relative;}
+.screen.active{display:flex}
+
+#battle-screen.active{display:grid;grid-template-columns:1fr 220px;grid-template-rows:auto 1fr auto;gap:15px;background:rgba(255,255,255,.3);border-radius:30px;height:100%;position:relative; align-items:stretch;}
+
+.flashy-title{font-size:3.2rem;font-weight:900;text-align:center;margin-top:10px;margin-bottom:10px;background:linear-gradient(135deg,#4aa8ff 0%,#8b5cf6 100%);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-shadow:0 8px 25px rgba(74,168,255,.3);letter-spacing:2px;}
+.subtitle{text-align:center;font-weight:800;color:#666;margin-bottom:20px;font-size:0.95rem;}
+:root{--main-blue:#4aa8ff;--accent-pink:#ff6b81;--purple:#8b5cf6;--gold:#fbbf24;--green:#2b8a3e}
+.btn{background:#fff;color:var(--main-blue);border:2px solid var(--main-blue);padding:14px 35px;border-radius:99px;font-size:1.2rem;font-weight:800;cursor:pointer;transition:all .2s ease;box-shadow:0 4px 15px rgba(74,168,255,.1);text-align:center}
+.btn:hover{background:var(--main-blue);color:#fff;transform:translateY(-2px);box-shadow:0 6px 20px rgba(74,168,255,.25)}
+.btn-disabled{background:#f5f5f5!important;cursor:not-allowed!important;border-color:#e0e0e0!important;color:#999!important;transform:none!important;box-shadow:none!important;}
+
+#start-screen{justify-content:center;align-items:center}
+.desc-box{background:rgba(255,255,255,.6);border-radius:16px;padding:20px 25px;margin-bottom:25px;font-size:0.95rem;font-weight:700;color:#444;line-height:1.7;text-align:left;width:100%;border:2px dashed #b0d8ff;}
+.menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;z-index:10;width:100%}
+
+.bgm-selector { margin-bottom: 20px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.arrow-btn { background: #fff; border: 2px solid #4aa8ff; color: #4aa8ff; border-radius: 50%; width: 36px; height: 36px; font-size: 1rem; font-weight: 900; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+.arrow-btn:hover { background: #eef6ff; transform: scale(1.1); }
+.arrow-btn:active { transform: scale(0.9); }
+
+#draft-screen.active { display: flex; flex-direction: row; gap: 20px; height: 100%; justify-content: space-between; padding: 25px 20px; }
+.draft-side { width: 180px; display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,.5); border-radius: 20px; padding: 15px 10px; overflow-y: auto; border: 2px solid; }
+.draft-side.p1-side { border-color: #4aa8ff; }
+.draft-side.p2-side { border-color: #ff6b81; }
+.draft-side-title { text-align: center; font-weight: 900; font-size: 1.1rem; margin-bottom: 5px; }
+.p1-side .draft-side-title { color: #4aa8ff; }
+.p2-side .draft-side-title { color: #ff6b81; }
+.draft-center { flex: 1; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,.8); border-radius: 20px; padding: 20px; border: 1px solid #ddd; position: relative; }
+.draft-turn-disp { font-size: 1.8rem; font-weight: 900; margin-bottom: 5px; text-shadow: 0 2px 5px rgba(0,0,0,.1); }
+.draft-turn-type { font-size: 1.2rem; font-weight: 800; color: #666; margin-bottom: 20px; }
+.draft-pool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 480px; margin-bottom: auto; }
+.draft-char-card { background: #fff; border: 3px solid #ddd; border-radius: 16px; padding: 15px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: .2s; box-shadow: 0 4px 10px rgba(0,0,0,.05); position: relative; }
+.draft-char-card:hover { transform: scale(1.05); }
+.draft-char-card.selected { border-color: var(--gold); box-shadow: 0 0 15px rgba(251,191,36,.8); transform: scale(1.05); }
+.draft-char-card.picked-p1 { opacity: 0.5; filter: grayscale(100%); border-color: #4aa8ff; pointer-events: none; }
+.draft-char-card.picked-p2 { opacity: 0.5; filter: grayscale(100%); border-color: #ff6b81; pointer-events: none; }
+.draft-avatar { width: 90px; height: 90px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; background: #eee; }
+.draft-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.draft-name { font-weight: 900; font-size: 1rem; color: #333; text-align: center; }
+.draft-controls { display: flex; justify-content: space-between; width: 100%; max-width: 480px; margin-top: 20px; }
+
+.battle-header{grid-column:1/2; grid-row:1/2; display:flex;justify-content:space-between;align-items:flex-start;background:rgba(255,255,255,.6);padding:12px 20px;border-radius:15px}
+.battle-main-view{grid-column:1/2;grid-row:2/3;display:flex;gap:15px;height:100%;overflow:visible;z-index:1;min-height:380px;}
+.battle-control-panel{grid-column:1/2;grid-row:3/4;background:rgba(255,255,255,.9);border:2px solid rgba(74,168,255,.3);border-radius:20px;padding:15px;display:flex;flex-direction:column;gap:10px;position:relative;z-index:1000;overflow:visible!important}
+.timeline-container{grid-column:2/3;grid-row:1/4;background:rgba(255,255,255,.7);border:2px solid rgba(74,168,255,.3);border-radius:20px;padding:15px;display:flex;flex-direction:column;align-items:center;overflow:hidden; position: relative;}
+
+.stage-title{font-weight:900;color:var(--purple);font-size:1.2rem;align-self:center}
+.lp-zone{width:40%;position:relative;cursor:pointer;border-radius:10px;padding:5px;transition:.2s}
+.lp-zone:hover{background:rgba(255,255,255,.5)}
+.lp-team-name{font-weight:900;font-size:1rem;margin-bottom:3px;display:flex;justify-content:space-between}
+.lp-bar-bg{width:100%;height:18px;background:#e0e0e0;border-radius:99px;overflow:hidden;border:1px solid #ccc;position:relative}
+.lp-bar-fill{height:100%;width:100%;transition:width .3s ease}
+.player-lp{background:linear-gradient(90deg,#4aa8ff,#8b5cf6)}
+.enemy-lp{background:linear-gradient(90deg,#ff6b81,#fbbf24)}
+.target-selected{outline:3px dashed #4aa8ff;animation:blink-border 1s infinite;outline-offset:3px}
+@keyframes blink-border{0%,100%{outline-color:#4aa8ff}50%{outline-color:transparent}}
+.team-status-box{min-height:24px;display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;justify-content:flex-end}
+.p-status{justify-content:flex-start}
+.s-badge{font-size:.75rem;font-weight:800;padding:2px 6px;border-radius:6px;color:#fff;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+.s-counter{background:#8b5cf6} .s-def{background:#4aa8ff} .s-buff{background:#fbbf24;color:#333} .s-endure{background:#2b8a3e} .s-poison-team{background:#9c36b5}
+.char-status-icons{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);display:flex;gap:3px;flex-wrap:wrap;justify-content:center;width:120%;z-index:10;pointer-events:none}
+.s-icon{font-size:.7rem;font-weight:900;padding:1px 4px;border-radius:4px;color:#fff;border:1px solid rgba(255,255,255,.8);box-shadow:0 2px 5px rgba(0,0,0,.2);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.s-icon.buff{background:#fbbf24;color:#333;text-shadow:none;border-color:#d97706} .s-icon.debuff{background:#4aa8ff} .s-icon.stun{background:#ff6b81}
+
+.status-hover-tooltip{visibility:hidden;position:absolute;background:rgba(0,0,0,.85);color:#fff;padding:8px 12px;border-radius:8px;font-size:.85rem;font-weight:700;white-space:pre-wrap;z-index:99999;opacity:0;transition:opacity .2s;pointer-events:none;text-align:left;min-width:180px;box-shadow:0 4px 10px rgba(0,0,0,.3)}
+#player-party-col .char-sprite .status-hover-tooltip {top:50%;bottom:auto;left:110%;transform:translateY(-50%);margin-top:0}
+#enemy-party-col .char-sprite .status-hover-tooltip {top:50%;bottom:auto;right:110%;left:auto;transform:translateY(-50%);margin-top:0}
+#player-party-col .char-sprite:nth-last-child(1) .status-hover-tooltip, #player-party-col .char-sprite:nth-last-child(2) .status-hover-tooltip { top:auto; bottom:0; transform:none; }
+#enemy-party-col .char-sprite:nth-last-child(1) .status-hover-tooltip, #enemy-party-col .char-sprite:nth-last-child(2) .status-hover-tooltip { top:auto; bottom:0; transform:none; }
+.lp-zone .status-hover-tooltip{top:100%;bottom:auto;left:0;margin-top:5px}
+#e-team-zone .status-hover-tooltip{left:auto;right:0}
+.char-sprite:hover .status-hover-tooltip,.lp-zone:hover .status-hover-tooltip{visibility:visible;opacity:1}
+
+.timeline-title{font-weight:900;color:var(--main-blue);font-size:1rem;margin-bottom:10px;text-align:center;border-bottom:2px dashed #b0d8ff;width:100%;padding-bottom:5px}
+.timeline-list{display:flex;flex-direction:column;gap:8px;width:100%;overflow-y:auto;overflow-x:hidden;flex-grow:1;padding:5px 12px;}
+.timeline-list::-webkit-scrollbar{width:6px} .timeline-list::-webkit-scrollbar-thumb{background:#b0d8ff;border-radius:3px}
+.timeline-item{padding:8px 10px;border-radius:12px;font-size:.9rem;font-weight:800;border:2px solid #ccc;text-align:center;transition:.3s;position:relative;margin:2px 0;word-break:break-all;overflow-wrap:break-word}
+.timeline-item.p-turn{background:#eef6ff;border-color:var(--main-blue);color:#2d5f88}
+.timeline-item.e-turn{background:#fff0f2;border-color:var(--accent-pink);color:#c92a2a}
+.timeline-item.current-active{border:3px solid var(--gold);background:#fffbdf;transform:scale(1.05);box-shadow:0 4px 10px rgba(251,191,36,.4);z-index:2; margin: 5px 0;}
+
+/* 🌟 ここで敗北ボタンも共通のボタンスタイルを適用 */
+.next-debate-btn { display: none; margin-top: 10px; padding: 12px 0; font-size: 1.05rem; font-weight: 900; background: linear-gradient(135deg, #ff9aa7, #ff6b81); color: #fff; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,107,129,0.3); width: 100%; transition: .2s; }
+.next-debate-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,107,129,0.4); }
+
+.party-col{width:105px;display:flex;flex-direction:column;gap:12px;justify-content:center;position:relative; padding: 5px;}
+.char-sprite{width:80px;height:80px;background:#fff;border-radius:12px;border:3px solid #ddd;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:.2s;box-shadow:0 4px 10px rgba(0,0,0,.15);margin:0 auto;cursor:pointer;flex-shrink:0;overflow:visible;}
+.char-sprite img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;opacity:.8;z-index:1;border-radius:10px} 
+.char-sprite:hover{background:#f0f7ff; transform:scale(1.05); z-index:1000;}
+.char-sprite.active-char{border:4px solid var(--gold);box-shadow:0 0 15px rgba(251,191,36,.8);transform:scale(1.1);z-index:5;}
+
+.center-display{flex:1 1 0;display:flex;flex-direction:column;background:rgba(255,255,255,.8);border-radius:20px;padding:12px 15px;border:1px solid rgba(0,0,0,.1);position:relative;padding-top:40px;min-height:0}
+.round-indicator{position:absolute;top:10px;left:15px;font-weight:900;color:var(--main-blue);font-size:1.2rem;border-bottom:2px dashed #b0d8ff;width:calc(100% - 30px)}
+.active-theme-display { background: rgba(255,255,255,.9); border: 2px dashed #b0d8ff; border-radius: 12px; padding: 10px 15px; text-align: center; font-weight: 800; color: #555; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);}
+.active-theme-name { color: #2d5f88; font-weight: 900; margin-bottom: 4px; font-size: 1.05rem;}
+.active-theme-effect { color: #8b5cf6; font-size: 0.9rem; font-weight: 800; }
+
+.log-box{flex:1 1 0;background:#f8f9fa;border-radius:12px;padding:15px;font-size:.95rem;font-weight:700;color:#444;overflow-y:auto;border:1px solid #eee;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 2px 5px rgba(0,0,0,.05);min-height:0}
+.panel-top-info{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:1.15rem}
+.current-turn-name{color:var(--main-blue)}
+.sp-display{background:var(--main-blue);color:#fff;padding:6px 20px;border-radius:99px;font-size:1.2rem}
+.command-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cmd-btn{background:#fdfdfd;border:2px solid #e0e0e0;padding:10px;border-radius:12px;font-weight:800;font-size:.95rem;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:.2s;position:relative;overflow:visible!important}
+.cmd-btn:not(.btn-disabled):hover{border-color:var(--main-blue);background:#f0f7ff;transform:translateY(-2px);z-index:1001}
+.cmd-btn.btn-disabled{background:#f5f5f5;cursor:not-allowed;border-color:#e0e0e0}
+.cmd-btn.btn-disabled>span,.cmd-btn.btn-disabled>div:not(.tooltip){opacity:.4}
+.cmd-cost{font-size:.8rem;color:#fff;background:#666;font-weight:700;margin-top:4px;padding:2px 10px;border-radius:99px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+.cmd-prob{color:#fbbf24;font-weight:900}
+.tooltip{visibility:hidden;position:absolute;bottom:110%;background:rgba(0,0,0,.9);color:#fff;padding:10px 14px;border-radius:8px;font-size:.9rem;font-weight:700;white-space:pre-wrap;word-break:break-all;z-index:99999;opacity:0;transition:opacity .2s;pointer-events:none;line-height:1.5;box-shadow:0 4px 10px rgba(0,0,0,.3);width:max-content;max-width:320px;margin-bottom:8px}
+.cmd-btn:nth-child(3n+1) .tooltip{left:0;transform:none}
+.cmd-btn:nth-child(3n+2) .tooltip{left:50%;transform:translateX(-50%)}
+.cmd-btn:nth-child(3n) .tooltip{left:auto;right:0;transform:none}
+.cmd-btn:hover .tooltip{visibility:visible;opacity:1}
+
+#scenario-screen{justify-content:center;align-items:center}
+.scenario-box{background:#fff;width:80%;padding:40px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1);display:flex;flex-direction:column;align-items:center;text-align:center;position:relative}
+.scenario-theme{font-size:1.3rem;font-weight:900;color:var(--purple);margin-bottom:20px;border-bottom:2px dashed #ddd;padding-bottom:10px;width:100%}
+.scenario-text{font-size:1.25rem;font-weight:800;color:#333;line-height:1.8;margin-bottom:15px}
+.boss-bg{background:linear-gradient(135deg,#1a1a1a,#4a0000)!important;color:#fff!important}
+.boss-bg .scenario-text{color:#fff}
+
+#collection-screen{overflow-y:auto; justify-content:flex-start;}
+.collection-header { position: sticky; top: -25px; background: rgba(255,255,255,0.95); z-index: 100; margin: -25px -30px 15px -30px; padding: 20px 30px; border-bottom: 2px dashed rgba(0,0,0,0.1); border-radius: 30px 30px 0 0; display: flex; justify-content: space-between; align-items: flex-start;}
+.grid-layout{display:grid;grid-template-columns:repeat(5,1fr);gap:15px;}
+.zemi-thumb-card{background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.05);border-radius:15px;padding:10px;text-align:center;cursor:pointer;transition:.2s;position:relative;}
+.zemi-thumb-card:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,.05)}
+.avatar-box{width:85px;height:85px;margin:0 auto 8px;background:#e5e7eb;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.avatar-box img{width:100%;height:100%;object-fit:cover}
+.zemi-thumb-card.locked .avatar-box img{display:none}
+.zemi-thumb-card.locked .avatar-box::after{content:'？';font-size:2.5rem;color:#fff;font-weight:900;position:absolute;z-index:2}
+.zemi-thumb-card.locked .avatar-box{background:#333}
+.zemi-thumb-card.locked .zemi-name{color:#aaa}
+.zemi-name{font-weight:800;font-size:.9rem}
+
+#intro-card-container .zemi-thumb-card { transform: scale(1.1); transition: 0.2s; }
+#intro-card-container .zemi-thumb-card:hover { transform: scale(1.15); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+
+@keyframes bossAura { 0% { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; color: #fff; } 50% { text-shadow: 0 0 10px #ff4d4d, 0 0 20px #ff0000, 0 0 30px #8a0000; color: #ffe6e6; } 100% { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; color: #fff; } }
+.ozawa-aura { animation: bossAura 1.5s infinite alternate; font-weight: 900 !important; background: #4a0000; padding: 2px 8px; border-radius: 6px; display: inline-block; letter-spacing: 2px; color: #fff; }
+.ozawa-card { background: linear-gradient(135deg, #1a1a1a, #4a0000) !important; border: 2px solid #ff0000 !important; box-shadow: 0 0 20px rgba(255,0,0,0.5) !important; }
+.ozawa-card .zemi-name { color: #fff !important; }
+
+.gold-badge { position: absolute; top: 2px; right: 2px; background: linear-gradient(135deg, #fcc419, #f08c00); color: #fff; font-size: 0.9rem; font-weight: 900; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 4px 10px rgba(240, 140, 0, 0.5); z-index: 10; border: 2px solid #fff; animation: shineBadge 2s infinite; }
+@keyframes shineBadge { 0%, 100% { box-shadow: 0 4px 10px rgba(240, 140, 0, 0.5); transform: scale(1); } 50% { box-shadow: 0 4px 20px rgba(255, 215, 0, 0.8); transform: scale(1.1); } }
+.new-badge { position: absolute; top: 2px; left: 2px; background: #ff6b81; color: white; font-size: 0.8rem; font-weight: 900; padding: 4px 10px; border-radius: 999px; box-shadow: 0 4px 10px rgba(255,107,129,0.4); z-index: 10; transform: rotate(-10deg); animation: popBadge 0.5s ease-out; }
+@keyframes popBadge { 0% { transform: scale(0) rotate(-10deg); } 80% { transform: scale(1.2) rotate(-10deg); } 100% { transform: scale(1) rotate(-10deg); } }
+
+.modal-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(74,168,255,.2);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:10000}
+.modal-card{background:rgba(255,255,255,.95);border:2px solid #fff;border-radius:24px;width:550px;padding:35px;box-shadow:0 20px 40px rgba(0,0,0,.1);position:relative}
+.modal-card.ozawa-card { background: linear-gradient(135deg, #1a1a1a, #4a0000) !important; color: #fff; }
+.modal-card.ozawa-card #m-furigana { color: #ff8888 !important; }
+.modal-card.ozawa-card #m-grade { color: #ffcccc !important; }
+.modal-card.ozawa-card .modal-type-badge { background: #8a0000 !important; color: #fff !important; }
+.modal-card.ozawa-card .modal-intro { color: #fff !important; }
+.modal-card.ozawa-card .status-grid { background: rgba(0,0,0,0.5) !important; color: #fff !important; }
+.modal-card.ozawa-card .modal-skill-title { color: #ff4d4d !important; }
+.modal-card.ozawa-card .modal-close { color: #fff !important; }
+
+.modal-close{position:absolute;top:15px;right:20px;font-size:1.8rem;cursor:pointer;font-weight:900;color:#888;transition:.2s;background:none;border:none;outline:none;}
+.modal-close:hover{color:#ff6b81;}
+.modal-header-info{display:flex;gap:15px;margin-bottom:20px;align-items:center}
+.modal-avatar{width:90px;height:90px;border-radius:15px;overflow:hidden;background:#eee}
+.modal-avatar img{width:100%;height:100%;object-fit:cover}
+.modal-meta h3{font-size:1.5rem;font-weight:900;margin-bottom:0;}
+.modal-type-badge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:.85rem;font-weight:800;background:var(--main-blue);color:#fff;margin-top:6px}
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0;background:#f8f9fa;padding:15px;border-radius:12px;font-size:.95rem;font-weight:800}
+.modal-skill-zone{border-top:1px dashed #ddd;border-bottom:1px dashed #ddd;padding:12px 0;margin-bottom:15px}
+.modal-skill-title{font-weight:900;color:var(--purple);font-size:1.05rem}
+.modal-intro{font-size:1rem;font-weight:700;color:#666;line-height:1.6}
+
+.prof-bubble-large{background:rgba(255,255,255,.95);border:3px solid #4aa8ff;border-radius:20px;padding:14px 18px;font-size:1.05rem;font-weight:800;color:#333;box-shadow:0 10px 25px rgba(74,168,255,.25);position:relative;text-align:left;line-height:1.6;display:inline-block;margin-bottom:15px;cursor:pointer;user-select:none;width:240px;box-sizing:border-box;}
+.prof-bubble-large::after,.prof-bubble-large::before{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border-style:solid;width:0}
+.prof-bubble-large::before{border-width:12px 12px 0;border-color:#4aa8ff transparent transparent transparent;bottom:-12px}
+.prof-bubble-large::after{border-width:8px 8px 0;border-color:rgba(255,255,255,.95) transparent transparent transparent;bottom:-8px}
+#ozawa-wrapper{position:fixed;bottom:20px;right:20px;left:auto;display:flex;flex-direction:column;align-items:center;z-index:10;cursor:pointer;transition:.2s}
+#ozawa-wrapper:hover{transform:scale(1.05)}
+#ozawa-img{width:220px;height:220px;object-fit:contain;object-position:bottom;filter:drop-shadow(0 15px 30px rgba(0,0,0,.15))}
+
+.floating{animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.dmg-text{position:absolute;font-size:1.8rem;font-weight:900;pointer-events:none;animation:floatUp 1s forwards;z-index:20;text-shadow:0 0 5px #fff}
+.dmg-player{color:#c92a2a} .dmg-enemy{color:#2b8a3e} .dmg-heal{color:#4aa8ff} .buff-text{color:#fbbf24}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-40px) scale(1.2)}}
+.start-battle-btn{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;font-size:1.6rem;font-weight:900;padding:20px 50px;background:linear-gradient(135deg,#ff9aa7,#ff6b81);color:#fff;border:4px solid #fff;border-radius:99px;cursor:pointer;box-shadow:0 10px 30px rgba(255,107,129,.5);transition:.2s;animation:floatCenter 3s ease-in-out infinite}
+.start-battle-btn:hover{transform:translate(-50%,-50%) scale(1.05)}
+@keyframes floatCenter{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,calc(-50% - 8px))}}
+
+#rulebook-modal .modal-card { width: 750px; height: 600px; padding: 40px 50px; text-align: center; position: relative; cursor: pointer; display: flex; flex-direction: column; box-sizing: border-box; }
+#rulebook-content { font-size: 1.15rem; line-height: 1.8; color: #444; margin-top: 30px; text-align: left; flex-grow: 1; overflow-y: auto; display: block; padding-right: 15px; }
+#rulebook-content::-webkit-scrollbar { width: 6px; }
+#rulebook-content::-webkit-scrollbar-thumb { background: #b0d8ff; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<button type="button" onclick="playBackTopAndGo('index.html')" class="top-return-btn" id="top-return-btn">← トップページに戻る</button>
+<button type="button" onclick="window.interruptGame()" class="interrupt-btn" id="interrupt-btn">⏸ やめる</button>
+
+<div class="blur-circle blue-main"></div><div class="blur-circle blue-sub"></div>
+
+<div id="ozawa-wrapper" class="floating" onclick="talkToProf()">
+    <div id="ozawa-bubble" class="prof-bubble-large">ディベートバトルへようこそ！</div>
+    <img id="ozawa-img" src="picture/ozawasensei/ozawa_default.png" alt="小澤先生">
+</div>
+
+<div class="game-container start-mode" id="game-container">
+    <div id="start-screen" class="screen active">
+        <h1 class="flashy-title">ディベートバトル</h1>
+        <p class="subtitle">〜 限られた発言権を回し、論理の力で立ちはだかるゼミ生を論破せよ！ 〜</p>
+        
+        <div class="desc-box">
+            これはRPG風のディベートコマンドバトルです！<br>
+            チーム全体で共有する「LP（論理整合性）」を削り合い、相手のLPを0にすれば論破完了。<br>
+            スキルを使うには「SP（発言権）」を消費します。SPもチームで共有するため、<br>
+            全員が行動できるようにSPを管理しながら、最適な反論を叩き込みましょう！<br>
+            最終ステージに待ち受ける「小澤先生」を論破できるか！？
+        </div>
+
+        <div class="bgm-selector">
+            <label style="font-size: 1.1rem; color: #888;">BGMプレイリスト</label>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button type="button" class="arrow-btn" onclick="changeBgm(-1)">◀</button>
+                <div id="bgm-display" style="font-size: 1.6rem; font-weight: 900; color: #4aa8ff; width: 60px; text-align: center;">1</div>
+                <button type="button" class="arrow-btn" onclick="changeBgm(1)">▶</button>
+            </div>
+        </div>
+
+        <div class="menu-buttons">
+            <div style="display: flex; gap: 20px; justify-content: center; width: 95%; margin-bottom: 5px;">
+                <button type="button" class="btn" style="flex: 1; white-space: nowrap; font-size: 1.25rem; padding: 14px 10px; background: linear-gradient(135deg, #ff6b81, #ff9aa7); color: #fff; border: none; box-shadow: 0 10px 25px rgba(255,107,129,0.4);" onclick="startNewGame(false)">一人用スタート</button>
+                <button type="button" class="btn" style="flex: 1; white-space: nowrap; font-size: 1.25rem; padding: 14px 10px; background: linear-gradient(135deg, #4aa8ff, #74c2ff); color: #fff; border: none; box-shadow: 0 10px 25px rgba(74,168,255,0.4);" onclick="startVersusGame()">二人対戦スタート</button>
+            </div>
+            <button type="button" class="btn" style="white-space: nowrap; font-size: 1.1rem; width: 60%; background:#f0f7ff;" onclick="openCollection()">ゼミ生図鑑を見る</button>
+            <button type="button" class="btn" style="white-space: nowrap; font-size: 1.1rem; width: 60%; background:#e0f2fe; border-color:#b0d8ff;" onclick="window.openRulebook(event)">📖 ルールブック</button>
+        </div>
+    </div>
+    
+    <div id="draft-screen" class="screen">
+        <div class="draft-side p1-side">
+            <div class="draft-side-title">1P チーム</div>
+            <div id="draft-p1-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+        
+        <div class="draft-center">
+            <div id="draft-turn-disp" class="draft-turn-disp">1Pのドラフトターン！</div>
+            <div id="draft-turn-type" class="draft-turn-type">リーダーライオン</div>
+            
+            <div id="draft-pool-grid" class="draft-pool-grid"></div>
+            
+            <div class="draft-controls" id="draft-controls">
+                <button type="button" id="draft-detail-btn" class="btn" style="padding: 8px 20px; font-size: 1rem; opacity: 0.5; pointer-events: none;" onclick="viewDraftCharDetail()">🔍 詳細表示</button>
+                <button type="button" id="draft-decide-btn" class="btn" style="padding: 8px 30px; font-size: 1.1rem; background: linear-gradient(135deg, #4aa8ff, #74c2ff); color: #fff; opacity: 0.5; pointer-events: none;" onclick="decideDraftPick()">決定</button>
+            </div>
+            
+            <!-- 🌟 修正ポイント：中央から下の余白に大きく配置 -->
+            <div id="draft-ready-container" style="display:none; width: 100%; max-width: 480px; margin-top: 20px;">
+                <button type="button" class="btn" style="width: 100%; padding: 20px; font-size: 1.6rem; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(251,191,36,0.5);" onclick="finishDraft()">準備OK！</button>
+            </div>
+        </div>
+
+        <div class="draft-side p2-side">
+            <div class="draft-side-title">2P チーム</div>
+            <div id="draft-p2-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+    </div>
+
+    <div id="intro-screen" class="screen" style="justify-content:center; align-items:center;" onclick="advanceFromIntro(event)">
+        <div class="scenario-box" style="cursor: pointer; width: 65%;">
+            <h2 style="font-size: 1.5rem; color: var(--main-blue); margin-bottom: 25px; border-bottom: 2px dashed #b0d8ff; padding-bottom: 10px; width: 100%;">今回のディベートリーダー</h2>
+            <div id="intro-card-container" onclick="event.stopPropagation(); openCharDetailFromIntro();">
+            </div>
+            <p style="font-size: 1.4rem; font-weight: 800; margin-top: 30px; color: #333;" id="intro-text"></p>
+            <p style="font-size: 1rem; color: #888; margin-top: 25px; font-weight:700;">(画面をクリックしてディベートへ進む)</p>
+        </div>
+    </div>
+
+    <div id="scenario-screen" class="screen">
+        <div id="scenario-box" class="scenario-box">
+            <div id="scenario-theme" class="scenario-theme">テーマ</div>
+            <div id="scenario-text" class="scenario-text">テキスト</div>
+            
+            <div id="companion-area" style="display:none; margin-top: 15px; text-align: center; width: 100%;">
+                <h3 id="companion-title" style="color: #ff6b81; margin-bottom: 15px; font-size: 1.2rem; font-weight: 900;">✨ 新たに仲間が加わったぞ！ ✨</h3>
+                <div id="companion-card" class="zemi-thumb-card" style="margin: 0 auto; width: 140px; cursor: pointer;"></div>
+                <p id="companion-click-desc" style="font-size: 0.85rem; color: #888; margin-top: 10px; font-weight: 700;">※アイコンクリックでキャラ詳細表示</p>
+            </div>
+
+            <button type="button" id="scenario-next-btn" class="btn" style="margin-top: 30px;">次へ</button>
+        </div>
+    </div>
+    
+    <div id="battle-screen" class="screen">
+        <div class="battle-header">
+            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                <div id="stage-indicator" class="stage-title">Stage 1 / 5</div>
+                <button type="button" class="btn" style="padding: 6px 16px; font-size: 0.95rem; background:#fff; color:#4aa8ff; box-shadow:none; border-width: 2px;" onclick="window.openRulebook(event)">📖 ルール</button>
+            </div>
+            <div class="lp-zone" id="p-team-zone" onclick="selectTarget('team', 'p')">
+                <div class="lp-team-name"><span id="p1-lp-label">味方チームLP</span><span id="player-lp-txt">100/100</span></div>
+                <div class="lp-bar-bg"><div id="player-lp-bar" class="lp-bar-fill player-lp"></div></div>
+                <div id="p-team-status" class="team-status-box p-status"></div>
+                <div class="status-hover-tooltip" id="p-team-hover">チーム状態変化: なし</div>
+            </div>
+            <div class="lp-zone" id="e-team-zone" onclick="selectTarget('team', 'e')">
+                <div class="lp-team-name"><span id="enemy-team-name">相手チームLP</span><span id="enemy-lp-txt">100/100</span></div>
+                <div class="lp-bar-bg"><div id="enemy-lp-bar" class="lp-bar-fill enemy-lp"></div></div>
+                <div id="e-team-status" class="team-status-box"></div>
+                <div class="status-hover-tooltip" id="e-team-hover">チーム状態変化: なし</div>
+            </div>
+        </div>
+
+        <div class="timeline-container">
+            <div class="timeline-title">行動順</div>
+            <div id="timeline-list" class="timeline-list"></div>
+            
+            <!-- 🌟 修正ポイント：敗北を認めるボタンも同じ場所に配置し、見た目を統一 -->
+            <button type="button" id="next-debate-btn" class="btn next-debate-btn" onclick="goToNextDebate()">次のディベートへ進む</button>
+            <button type="button" id="vs-end-btn" class="btn next-debate-btn" style="display:none;" onclick="endVersusGame()">スタート画面に戻る</button>
+            <button type="button" id="lose-next-btn" class="btn next-debate-btn" style="display:none; background: linear-gradient(135deg, #c92a2a, #ff6b81);" onclick="goToLoseScenario()">敗北を認める</button>
+        </div>
+        
+        <div class="battle-main-view">
+            <div class="party-col" id="player-party-col"></div>
+            
+            <div class="center-display">
+                <div id="round-indicator" class="round-indicator">Round 1</div>
+                <div id="active-theme-display" class="active-theme-display" style="display: none;">
+                    <div class="active-theme-name" id="active-theme-name">テーマ</div>
+                    <div class="active-theme-effect" id="active-theme-effect">効果テキスト</div>
+                </div>
+                <div id="battle-log" class="log-box"></div>
+                
+                <button type="button" id="start-battle-btn" class="start-battle-btn" onclick="startRealBattle()">戦闘開始！</button>
+            </div>
+            <div class="party-col" id="enemy-party-col"></div>
+        </div>
+        
+        <div class="battle-control-panel">
+            <div class="panel-top-info">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div>現在行動中: <span id="current-actor" class="current-turn-name">ーー</span></div>
+                    <button type="button" id="view-char-detail-btn" class="btn" style="padding: 4px 12px; font-size: 0.85rem; border-radius: 8px; border-width: 2px; opacity: 0.5; pointer-events: none;" onclick="viewSelectedCharDetail()">🔍 キャラ詳細</button>
+                </div>
+                <div class="sp-display" id="sp-display-box"><span id="sp-team-label">チーム発言権</span>(SP): <span id="team-sp">0</span> / <span id="max-sp">0</span></div>
+            </div>
+            <div id="command-grid" class="command-grid">
+                <button type="button" class="cmd-btn" id="cmd-atk" onclick="if(!this.classList.contains('btn-disabled')) executePlayerAction(0)"><span class="cmd-name">通常反論</span><span class="cmd-cost">SP 1</span><div class="tooltip">[ターゲット選択不要]<br>敵チームに論理力依存のダメージを与える</div></button>
+                <button type="button" class="cmd-btn" id="cmd-def" onclick="if(!this.classList.contains('btn-disabled')) executePlayerAction(1)"><span class="cmd-name">リスクヘッジ</span><span class="cmd-cost">SP 1</span><div class="tooltip">[ターゲット選択不要]<br>次の敵の行動終了時まで、受けるダメージを半減する</div></button>
+                <button type="button" class="cmd-btn" id="cmd-s1" onclick="if(!this.classList.contains('btn-disabled')) executePlayerAction(2)"><span class="cmd-name">スキル1</span><span class="cmd-cost">SP -</span><div class="tooltip"></div></button>
+                <button type="button" class="cmd-btn" id="cmd-s2" onclick="if(!this.classList.contains('btn-disabled')) executePlayerAction(3)"><span class="cmd-name">スキル2</span><span class="cmd-cost">SP -</span><div class="tooltip"></div></button>
+                <button type="button" class="cmd-btn" id="cmd-s3" onclick="if(!this.classList.contains('btn-disabled')) executePlayerAction(4)"><span class="cmd-name">スキル3</span><span class="cmd-cost">SP -</span><div class="tooltip"></div></button>
+                <button type="button" class="cmd-btn" id="cmd-u" onclick="if(!this.classList.contains('btn-disabled')) executePlayerAction(5)"><span class="cmd-name">固有スキル</span><span class="cmd-cost">SP -</span><div class="tooltip"></div></button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="collection-screen" class="screen">
+        <div class="collection-header">
+            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
+                <h1 style="font-size:1.8rem; margin:0;">小澤ゼミ生図鑑</h1>
+                <button type="button" class="btn" style="padding:6px 20px;font-size:1rem;" id="collection-back-btn">戻る</button>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                <div style="font-weight:800; color:#8b5cf6; font-size:1.1rem; margin-top:4px;" id="collection-progress">収集率: 0 / 0 (0%)</div>
+                <button type="button" class="btn" style="padding:6px 20px;font-size:1rem;color:#ff6b81;border-color:#ff6b81;" onclick="resetCollection()">図鑑をリセット</button>
+            </div>
+        </div>
+        <div id="grid-layout" class="grid-layout"></div>
+    </div>
+    
+    <div id="detail-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-card" id="detail-modal-card" onclick="closeModal(event)">
+            <button type="button" class="modal-close" onclick="closeModal(event)">×</button>
+            <div class="modal-header-info">
+                <div class="modal-avatar"><img id="m-img" src=""></div>
+                <div class="modal-meta">
+                    <div id="m-grade" style="font-size:0.95rem; color:#666; font-weight:800; margin-bottom:-2px;">学年</div>
+                    <div id="m-furigana" style="font-size:0.85rem; color:#888; font-weight:800; margin-bottom:-4px;">フリガナ</div>
+                    <h3 id="m-name" style="margin-bottom:0;">名前</h3>
+                    <div class="modal-type-badge" id="m-type">タイプ</div>
+                </div>
+            </div>
+            <div class="status-grid">
+                <div>論理力: <span id="s-lon"></span></div>
+                <div>発想力: <span id="s-hat"></span></div>
+                <div>メンタル: <span id="s-men"></span></div>
+                <div>スピード: <span id="s-spe"></span></div>
+                <div>コスト管理: <span id="s-cos"></span></div>
+                <div>運: <span id="s-un"></span></div>
+            </div>
+            <div class="modal-skill-zone">
+                <div class="modal-skill-title">固有スキル: <span id="m-skill"></span></div>
+                <div id="m-skill-desc" style="font-size:0.95rem; color:#555; margin-top:10px; font-weight:700; line-height:1.5;"></div>
+            </div>
+            <p class="modal-intro" id="m-intro"></p>
+        </div>
+    </div>
+
+    <div id="rulebook-modal" class="modal-overlay" style="z-index: 10000; align-items: center; justify-content: center; display: none;" onclick="closeRulebook()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div id="rulebook-page-indicator" style="position: absolute; top: 15px; left: 20px; font-weight: 900; color: #4aa8ff; font-size: 1.2rem;">1 / 7</div>
+            <button type="button" class="modal-close" style="top: 10px; right: 15px;" onclick="closeRulebook(); event.stopPropagation();">×</button>
+            <div id="rulebook-content"></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px;">
+                <button type="button" id="rulebook-prev-btn" class="btn" style="padding: 10px 25px; font-size: 1rem; visibility: hidden; white-space: nowrap;" onclick="window.prevRulePage(event); event.stopPropagation();">← 戻る</button>
+                <div style="font-size: 0.95rem; color: #888; font-weight: 700; background: #f0f7ff; padding: 10px; border-radius: 8px; text-align: center; flex-grow: 1; margin: 0 15px; pointer-events: none;">（ESCで閉じる）</div>
+                <button type="button" id="rulebook-next-btn" class="btn" style="padding: 10px 25px; font-size: 1rem; white-space: nowrap;" onclick="window.nextRulePage(event); event.stopPropagation();">次へ →</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('click', function(e) {
+    if(e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        let btn = e.target.tagName === 'BUTTON' ? e.target : e.target.closest('button');
+        btn.blur();
+    }
+});
+
+const audioFiles = {
+    jump: 'sound/SE/jump.mp3', start: 'sound/SE/start.mp3', select: 'sound/SE/select.mp3',
+    correct: 'sound/SE/correct.mp3', wrong: 'sound/SE/wrong.mp3', clear: 'sound/SE/clear.mp3',
+    back_start: 'sound/SE/back_start.mp3', prof_click: 'sound/SE/prof_click.mp3', back_top: 'sound/SE/back_top.mp3',
+    modal_open: 'sound/SE/modal_open.mp3', neutral: 'sound/SE/neutral.mp3', attack: 'sound/SE/attack.mp3',
+    guard: 'sound/SE/guard.mp3', buff: 'sound/SE/buff.mp3', debuff: 'sound/SE/debuff.mp3',
+    guard_damage: 'sound/SE/guard_damage.mp3', counter: 'sound/SE/counter.mp3', poison: 'sound/SE/poison.mp3',
+    upgrade_attack: 'sound/SE/upgrade_attack.mp3', result_bad: 'sound/SE/result_bad.mp3', reset: 'sound/SE/reset.mp3',
+    stun: 'sound/SE/stun.mp3', kuishibari: 'sound/SE/kuishibari.mp3', debuff_restore: 'sound/SE/debuff_restore.mp3',
+    boss: 'sound/SE/boss.mp3', insta: 'sound/SE/insta.mp3'
+};
+const SE = {};
+for (let key in audioFiles) { SE[key] = new Audio(audioFiles[key]); }
+
+let currentBgmIndex = 1;
+const bgm = new Audio(`sound/BGM/debate-battle/debate-battle_${currentBgmIndex}.mp3`);
+bgm.loop = true; bgm.volume = 0.4;
+let isExiting = false;
+let isVersusMode = false;
+
+// 🌟 効果音（SE）が途切れたり鳴らなかったりする問題を解消
+function playSE(key) {
+    if (isExiting && key !== 'back_top') return;
+    if (SE[key]) { 
+        let soundClone = SE[key].cloneNode(true);
+        soundClone.volume = SE[key].volume || 1.0;
+        soundClone.play().catch(() => {}); 
+    }
+}
+
+window.changeBgm = function(dir) {
+    playSE('modal_open');
+    currentBgmIndex += dir;
+    if (currentBgmIndex > 5) currentBgmIndex = 1;
+    if (currentBgmIndex < 1) currentBgmIndex = 5;
+    
+    const disp = document.getElementById('bgm-display');
+    if (currentBgmIndex === 5) {
+        disp.innerText = "なし"; bgm.pause();
+    } else {
+        disp.innerText = currentBgmIndex;
+        const wasPlaying = !bgm.paused;
+        bgm.src = `sound/BGM/debate-battle/debate-battle_${currentBgmIndex}.mp3`;
+        if (wasPlaying) { bgm.play().catch(e => console.log("BGM play failed", e)); }
+    }
+};
+
+function playBackTopAndGo(url) {
+    isExiting = true; isGameOver = true; bgm.pause();
+    playSE('back_top'); setTimeout(() => { window.location.href = url; }, 400);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    let cbBtn = document.getElementById('collection-back-btn');
+    if(cbBtn) cbBtn.style.display = 'none';
+
+    // 🌟 画像の読み込み遅延によるカクつきを防ぐためのプリロード処理
+    setTimeout(() => {
+        ZEMI_DATABASE.forEach(z => {
+            const img = new Image(); img.src = z.img;
+        });
+        const prof1 = new Image(); prof1.src = "picture/ozawasensei/ozawa_default.png";
+        const prof2 = new Image(); prof2.src = "picture/ozawasensei/ozawa_laugh.png";
+        const prof3 = new Image(); prof3.src = "picture/ozawasensei/ozawa_angry.png";
+    }, 500);
+});
+
+const P_LION="picture/type/lion.png",P_RABBIT="picture/type/usagi.png",P_DOG="picture/type/inu.png",P_SQUIRREL="picture/type/risu.png";
+const aDesc = "敵陣に対して、論理力依存の超強力なダメージ（通常の2.5倍）を与える！";
+const hDesc = "味方チーム全体のLPを大回復し、デバフ・迷走(毒)・行動不能をすべて解除する。";
+
+const ZEMI_DATABASE=[
+{id:"azuma",name:"東 泰生",furigana:"あずま たいき",type:"リーダーライオン",grade:2,img:"picture/avatar-icon/azumataiki.png",intro:"逆境にも負けずチームを鼓舞する熱血漢。",uniqueSkill:"突破の戦術",skillDesc:aDesc,stats:{lon:4,hat:3,men:5,spe:4,cos:2,un:2}},
+{id:"iinuma",name:"飯沼 美琴",furigana:"いいぬま みこと",type:"わくわくうさぎ",grade:2,img:"picture/avatar-icon/iinumamikoto.png",intro:"流行に敏感で新しいアイデアを次々と生み出す。",uniqueSkill:"トレンドキャッチ",skillDesc:aDesc,stats:{lon:2,hat:5,men:3,spe:5,cos:2,un:3}},
+{id:"kajitani",name:"梶谷 雪花",furigana:"かじたに ゆきか",type:"お世話いぬ",grade:2,img:"picture/avatar-icon/kajitaniyukika.png",intro:"チームを和ませ、焦りを取り除く癒やしの存在。",uniqueSkill:"癒やしの空間",skillDesc:hDesc,stats:{lon:2,hat:4,men:5,spe:3,cos:3,un:3}},
+{id:"konami",name:"小波 祐元",furigana:"こなみ ゆうま",type:"リーダーライオン",grade:2,img:"picture/avatar-icon/konamiyuuma.png",intro:"論理的なアプローチで課題を突破する。",uniqueSkill:"ロジカルブレイク",skillDesc:aDesc,stats:{lon:5,hat:2,men:4,spe:4,cos:3,un:2}},
+{id:"sakamoto",name:"坂本 麻衣",furigana:"さかもと まい",type:"リーダーライオン",grade:2,img:"picture/avatar-icon/sakamotomai.png",intro:"常に先陣を切ってゼミを引っ張る2年のエース。",uniqueSkill:"先陣の号令",skillDesc:aDesc,stats:{lon:4,hat:3,men:4,spe:4,cos:3,un:2}},
+{id:"sato_y",name:"佐藤 悠飛",furigana:"さとう ゆうひ",type:"お世話いぬ",grade:2,img:"picture/avatar-icon/satouyuuhi.png",intro:"誰にでも優しく気配りができるサポート役。",uniqueSkill:"全体サポート",skillDesc:hDesc,stats:{lon:3,hat:3,men:5,spe:3,cos:4,un:2}},
+{id:"shimizu_y",name:"清水 柚菜",furigana:"しみず ゆうな",type:"わくわくうさぎ",grade:2,img:"picture/avatar-icon/shimizuyuuna.png",intro:"人を惹きつけるコンテンツを生み出すクリエイター。",uniqueSkill:"クリティカル・バズ",skillDesc:aDesc,stats:{lon:3,hat:4,men:3,spe:5,cos:2,un:3}},
+{id:"dazai",name:"太宰 正清",furigana:"だざい まさきよ",type:"お世話いぬ",grade:2,img:"picture/avatar-icon/dazaimasakiyo.png",intro:"ピンチの時に素早く体制を立て直す調整役。",uniqueSkill:"リカバリープラン",skillDesc:hDesc,stats:{lon:3,hat:3,men:4,spe:3,cos:5,un:2}},
+{id:"mizutani",name:"水谷 空磨",furigana:"みずたに くうま",type:"わくわくうさぎ",grade:2,img:"picture/avatar-icon/mizutanikuuma.png",intro:"変化を恐れず柔軟に計画をシフトさせる。",uniqueSkill:"アジャイル・シフト",skillDesc:aDesc,stats:{lon:3,hat:5,men:2,spe:4,cos:4,un:2}},
+{id:"yokoi",name:"横井 大誠",furigana:"よこい たいせい",type:"ロジカルりす",grade:2,img:"picture/avatar-icon/yokoitaisei.png",intro:"膨大なデータ処理を瞬時にこなす情報処理班。",uniqueSkill:"データ・ストーム",skillDesc:aDesc,stats:{lon:5,hat:2,men:3,spe:3,cos:5,un:2}},
+{id:"yoneda",name:"米田 樹生",furigana:"よねだ いつき",type:"ロジカルりす",grade:2,img:"picture/avatar-icon/yonedaitsuki.png",intro:"確かな事実を弾丸のように撃ち込むディベーター。",uniqueSkill:"ファクト・バレット",skillDesc:aDesc,stats:{lon:5,hat:3,men:4,spe:2,cos:4,un:2}},
+{id:"amano",name:"天野 日向子",furigana:"あまの ひなこ",type:"ロジカルりす",grade:3,img:"picture/avatar-icon/amanohinako.png",intro:"OBOG会で抜け漏れを許さない堅実な手配役。",uniqueSkill:"リストアップ",skillDesc:aDesc,stats:{lon:5,hat:2,men:4,spe:4,cos:4,un:1}},
+{id:"oikawa",name:"及川 颯斗",furigana:"おいかわ はやと",type:"リーダーライオン",grade:3,img:"picture/avatar-icon/oikawahayato.png",intro:"企業へのアポ取りなら誰にも負けない特攻隊長！",uniqueSkill:"強引なアポイント",skillDesc:aDesc,stats:{lon:5,hat:2,men:5,spe:4,cos:3,un:1}},
+{id:"okano",name:"岡野 然",furigana:"おかの ぜん",type:"リーダーライオン",grade:3,img:"picture/avatar-icon/okanozen.png",intro:"冷静沈着に全体のバランスをとる副ゼミ長。",uniqueSkill:"副ゼミ長の指揮",skillDesc:aDesc,stats:{lon:4,hat:3,men:5,spe:4,cos:4,un:2}},
+{id:"kondo",name:"近藤 行",furigana:"こんどう いき",type:"わくわくうさぎ",grade:3,img:"picture/avatar-icon/kondouiki.png",intro:"合宿の手配から企画までこなす切り込み隊長。",uniqueSkill:"弾丸トラベル",skillDesc:aDesc,stats:{lon:3,hat:5,men:3,spe:4,cos:3,un:2}},
+{id:"sato_m",name:"佐藤 弥",furigana:"さとう あまね",type:"わくわくうさぎ",grade:3,img:"picture/avatar-icon/satouamane.png",intro:"SNS係の係長。映える画角を常に見逃さない。",uniqueSkill:"画角の追求",skillDesc:aDesc,stats:{lon:2,hat:5,men:2,spe:5,cos:3,un:3}},
+{id:"sato_k",name:"佐藤 光亮",furigana:"さとう こうすけ",type:"お世話いぬ",grade:3,img:"picture/avatar-icon/satoukousuke.png",intro:"穏やかな口調で険悪な議論の空気を和ませる合宿係長。",uniqueSkill:"和やかな空気",skillDesc:hDesc,stats:{lon:2,hat:4,men:5,spe:2,cos:4,un:3}},
+{id:"shimizu",name:"清水 葉瑠",furigana:"しみず はる",type:"リーダーライオン",grade:3,img:"picture/avatar-icon/shimizuharu.png",intro:"ゼミの方向性を決定する絶対的ゼミ長。",uniqueSkill:"ゼミ長の号令",skillDesc:aDesc,stats:{lon:5,hat:3,men:5,spe:3,cos:3,un:1}},
+{id:"tashiro",name:"田代 葵",furigana:"たしろ あおい",type:"ロジカルりす",grade:3,img:"picture/avatar-icon/tashiroaoi.png",intro:"精密な報告書とタイムラインを練り上げる記録のスペシャリスト。",uniqueSkill:"テンプレート論法",skillDesc:aDesc,stats:{lon:5,hat:2,men:3,spe:3,cos:4,un:3}},
+{id:"tanaka",name:"田中 健太",furigana:"たなか けんた",type:"ロジカルりす",grade:3,img:"picture/avatar-icon/tanakakenta.png",intro:"データの違和感を瞬時に見抜く、堅実な議論の防波堤。",uniqueSkill:"ファクトチェック",skillDesc:aDesc,stats:{lon:5,hat:3,men:4,spe:3,cos:3,un:2}},
+{id:"toyama",name:"遠山 海音",furigana:"とおやま かいと",type:"リーダーライオン",grade:3,img:"picture/avatar-icon/tooyamakaito.png",intro:"新入生獲得を担う採用チームの要。",uniqueSkill:"リクルート戦術",skillDesc:aDesc,stats:{lon:5,hat:2,men:5,spe:3,cos:4,un:1}},
+{id:"nozaki",name:"野崎 美ら",furigana:"のざき ちゅら",type:"わくわくうさぎ",grade:3,img:"picture/avatar-icon/nozakichura.png",intro:"新しいアイデアを生み出すSNS戦略のキーマン。",uniqueSkill:"バズりマーケティング",skillDesc:aDesc,stats:{lon:2,hat:5,men:3,spe:5,cos:3,un:2}},
+{id:"sako",name:"迫 木乃美",furigana:"はさま このみ",type:"お世話いぬ",grade:3,img:"picture/avatar-icon/hasamakonomi.png",intro:"OBOG会の係長。先輩方とのパイプを強固にする。",uniqueSkill:"縦の繋がり",skillDesc:aDesc,stats:{lon:2,hat:3,men:5,spe:3,cos:5,un:2}},
+{id:"mizukoshi",name:"水越 圭吾",furigana:"みずこし けいご",type:"お世話いぬ",grade:3,img:"picture/avatar-icon/mizukoshikeigo.png",intro:"議論の調整役であり、コンテンツ制作を裏で支える功労者。",uniqueSkill:"フレームワーク調整",skillDesc:aDesc,stats:{lon:3,hat:4,men:5,spe:3,cos:3,un:2}},
+{id:"ahn",name:"アン ジュンヒョク",furigana:"あん じゅんひょく",type:"わくわくうさぎ",grade:4,img:"picture/avatar-icon/ahnjunhyeok.png",intro:"行き詰まった状況を打破する一手を放つ。",uniqueSkill:"ブレイクスルー",skillDesc:aDesc,stats:{lon:3,hat:5,men:3,spe:4,cos:3,un:2}},
+{id:"arakawa",name:"荒川 珠希",furigana:"あらかわ たまき",type:"ロジカルりす",grade:4,img:"picture/avatar-icon/arakawatamaki.png",intro:"圧倒的な証拠の山で相手を沈黙させる。",uniqueSkill:"エビデンス・ラッシュ",skillDesc:aDesc,stats:{lon:4,hat:2,men:4,spe:3,cos:5,un:2}},
+{id:"okajima",name:"岡島 彩乃",furigana:"おかじま あやの",type:"ロジカルりす",grade:4,img:"picture/avatar-icon/okajimaayano.png",intro:"隙のないロジックで相手を追い詰める論客。",uniqueSkill:"完全なる論破",skillDesc:aDesc,stats:{lon:5,hat:3,men:3,spe:4,cos:4,un:1}},
+{id:"kawasaki",name:"川崎 靖代",furigana:"かわさき やすよ",type:"ロジカルりす",grade:4,img:"picture/avatar-icon/kawasakiyasuyo.png",intro:"微細な矛盾も見逃さない完璧主義のレビュアー。",uniqueSkill:"クリティカル・レビュー",skillDesc:aDesc,stats:{lon:5,hat:2,men:3,spe:4,cos:5,un:1}},
+{id:"kim",name:"チョウ キム ロン",furigana:"ちょう きむ ろん",type:"お世話いぬ",grade:4,img:"picture/avatar-icon/truongkimlong.png",intro:"多国籍な視野で皆を包み込む大きな器。",uniqueSkill:"グローバル・ケア",skillDesc:hDesc,stats:{lon:3,hat:4,men:5,spe:2,cos:4,un:2}},
+{id:"kwon",name:"権 瑜秦",furigana:"けん ゆじん",type:"リーダーライオン",grade:4,img:"picture/avatar-icon/kenyujin.png",intro:"力強い意見と行動力で道を切り開く覇者。",uniqueSkill:"覇者のロジック",skillDesc:aDesc,stats:{lon:5,hat:3,men:5,spe:4,cos:2,un:1}},
+{id:"shimada",name:"島田 優芽",furigana:"しまだ ゆめ",type:"わくわくうさぎ",grade:4,img:"picture/avatar-icon/shimadayume.png",intro:"予測不能なアイデアで議論に革新をもたらす。",uniqueSkill:"インスピレーション",skillDesc:aDesc,stats:{lon:2,hat:5,men:3,spe:4,cos:3,un:3}},
+{id:"nakamura",name:"中村 沙耶",furigana:"なかむら さや",type:"お世話いぬ",grade:4,img:"picture/avatar-icon/nakamurasaya.png",intro:"混乱した空気を一瞬でリセットさせる浄化役。",uniqueSkill:"メンタル・リセット",skillDesc:hDesc,stats:{lon:2,hat:3,men:5,spe:3,cos:5,un:2}},
+{id:"harada",name:"原田 拓実",furigana:"はらだ たくみ",type:"リーダーライオン",grade:4,img:"picture/avatar-icon/haradatakumi.png",intro:"圧倒的統率力で絶対的信頼を得る4年のリーダー。",uniqueSkill:"絶対的采配",skillDesc:aDesc,stats:{lon:5,hat:3,men:5,spe:3,cos:3,un:1}},
+{id:"henmi",name:"逸見 咲羽",furigana:"へんみ さわ",type:"リーダーライオン",grade:4,img:"picture/avatar-icon/henmisawa.png",intro:"人を惹きつける言葉選びで議論を導くカリスマ。",uniqueSkill:"カリスマの導き",skillDesc:aDesc,stats:{lon:4,hat:4,men:4,spe:4,cos:2,un:2}},
+{id:"hosokawa",name:"細川 大翔",furigana:"ほそかわ たいせい",type:"お世話いぬ",grade:4,img:"picture/avatar-icon/hosokawataisei.png",intro:"不測の事態にも対応できるよう裏で支援する。",uniqueSkill:"バックアップ体制",skillDesc:hDesc,stats:{lon:3,hat:3,men:4,spe:3,cos:5,un:2}},
+{id:"mine",name:"三根 蔵呂人",furigana:"みね くろうど",type:"リーダーライオン",grade:4,img:"picture/avatar-icon/minekuroudo.png",intro:"決して崩れない盤石な論理基盤を構築する。",uniqueSkill:"盤石の布陣",skillDesc:aDesc,stats:{lon:5,hat:2,men:5,spe:3,cos:4,un:1}},
+{id:"miyata",name:"宮田 結季",furigana:"みやた ゆき",type:"わくわくうさぎ",grade:4,img:"picture/avatar-icon/miyatayuki.png",intro:"常識を疑い、新しい価値観を提示するイノベーター。",uniqueSkill:"パラダイムシフト",skillDesc:aDesc,stats:{lon:3,hat:5,men:2,spe:5,cos:3,un:2}},
+{id:"yoshida",name:"吉田 晴子",furigana:"よしだ はるこ",type:"お世話いぬ",grade:4,img:"picture/avatar-icon/yoshidaharuko.png",intro:"対立を調停し、両者が納得する結論へ導く。",uniqueSkill:"ピースメーカー",skillDesc:hDesc,stats:{lon:2,hat:4,men:5,spe:2,cos:4,un:3}},
+{id:"prof_ozawa",name:"小澤 康裕",furigana:"おざわ みちひろ",type:"大論破王",grade:99,img:"picture/ozawasensei/ozawa_default.png",intro:"すべてを見透かす小澤ゼミのボス。鋭いツッコミは一瞬で論理を崩壊させる。",uniqueSkill:"ちゃぶ台返し",skillDesc:"プレイヤーのバフをすべて消し飛ばし、超大ダメージを与える恐ろしい技！",stats:{lon:5,hat:5,men:5,spe:5,cos:5,un:5}}
+];
+
+const SKILLS={
+"リーダーライオン":[{name:"カウンターロジック",baseCost:2,desc:"[ターゲット選択不要]\nダメージを無効化し、本来受けるはずのダメージの2倍を跳ね返す\n(次の敵行動終了まで)"},{name:"リーダーの鼓舞",baseCost:3,desc:"[ターゲット選択不要]\nチーム全体の論理力を2ラウンド上昇させる"},{name:"クリティカル・ファクト",baseCost:4,desc:"[ターゲット選択不要]\n命中率は味方と敵陣の『発想力＋運』の差で変動(30%~80%)。\n命中時、通常の2倍の威力で、相手の防御やカウンターを完全に無視(貫通)して攻撃できる！",prob:"変動"}],
+"わくわくうさぎ":[{name:"ブレインストーミング",baseCost:2,desc:"[ターゲット選択不要]\nチームのスピードを2ラウンド上昇させる"},{name:"論点スリカエ",baseCost:3,desc:"[ターゲット選択不要]\n敵全体を迷走(毒)にし、2〜3R分の行動中毎ターン継続ダメージ\n(確率は『発想力＋運』の差で変動：30%~80%)",prob:"変動"},{name:"アジェンダクラッシュ",baseCost:4,desc:"[敵単体を選択して発動]\nダメージを与え、さらに確率で敵の次の行動をスキップさせる\n（確率は『発想力＋運』の差で変動：30%~80%)",prob:"変動"}],
+"お世話いぬ":[{name:"アイスブレイク",baseCost:2,desc:"[デバフ中の味方単体、または味方全体を選択]\nデバフ・状態異常(毒・行動不能を含む)をすべて解除"},{name:"メンタルケア",baseCost:3,desc:"[ターゲット選択不要]\nチームの論理整合性(LP)を大きく回復する"},{name:"鉄壁の根回し",baseCost:4,desc:"[ターゲット選択不要]\n受けるダメージを激減(1/5)させる\n(敵の行動2回分継続)"}],
+"ロジカルりす":[{name:"矛盾点の指摘",baseCost:2,desc:"[敵単体を選択して発動]\n敵の論理力とメンタルを2ラウンド低下させる",prob:"必中"},{name:"キラーパス",baseCost:3,desc:"[ターゲット選択不要]\n味方が次に放つ攻撃の威力を3倍にする"},{name:"マシンガン・データ",baseCost:4,desc:"[ターゲット選択不要]\n敵陣に3〜7回の連続攻撃\n(3倍バフ等は全弾に乗る)",prob:"必中"}]
+};
+
+const UNIQUE_SKILL_BASE = {
+    "和やかな空気": 5, "全体サポート": 5, "癒やしの空間": 5, "リカバリープラン": 5, "グローバル・ケア": 5, "メンタル・リセット": 5, "ピースメーカー": 5, "バックアップ体制": 5, "完全なる論破": 5, "エビデンス・ラッシュ": 5, "ゼミ長の号令": 5, "覇者のロジック": 5, "絶対的采配": 5, "カリスマの導き": 5,
+    "強引なアポイント": 3, "バズりマーケティング": 3, "弾丸トラベル": 3, "パラダイムシフト": 3,
+};
+
+const THEMES = [
+    { title: "生き方の選択", q: "「安定したサラリーマン」と「企業に縛られない自由な生き方」どちらを選ぶべきか？", effectId: "life", effectDesc: "多様な生き方を論じるため「わくわくうさぎ」と「お世話いぬ」のスピードとメンタルが1.2倍になる。" },
+    { title: "動画配信サブスクの未来", q: "競争が白熱する動画配信サブスクリプション業界において、今後も顧客を獲得していくには何が求められるか？", effectId: "business", effectDesc: "熾烈なビジネス戦略を問うため「リーダーライオン」の論理力が1.2倍になる。" },
+    { title: "日本の国際的地位回復", q: "日本の影響力は低下している。今後どのようにして国際的な地位を回復していくべきか？", effectId: "heavy", effectDesc: "マクロで重いテーマのため、毎ターンのチームSP回復量が「通常より-1」される。" },
+    { title: "SNSと人とのつながり", q: "Instagram、Facebookの代わりにTikTok、YouTubeを使用することで、より人とのつながりを感じることができるのか？", effectId: "sns", effectDesc: "身近なトレンドテーマのため「わくわくうさぎ」のスキル成功確率が+15%される。" },
+    { title: "大廃業時代とM&A", q: "どのような企業であればM&Aによる承継を通じて「救われる」べきなのか、逆に退出を受け入れるべきか？", effectId: "ma", effectDesc: "緻密なデータ分析が必須なため「ロジカルりす」の論理力とスピードが1.2倍になる。" },
+    { title: "キャンセルカルチャー", q: "キャンセルカルチャー（不祥事を起こした人を徹底的に排除する風潮）に“セカンドチャンス”はあるべきか？", effectId: "cancel", effectDesc: "倫理と感情が絡むテーマのため「お世話いぬ」のLP回復スキルの効果が1.5倍になる。" },
+    { title: "AIとの人間関係", q: "今後AIが発展していくにつれ、人間とAIは真の友達になれるか？また、AI依存を防ぐ方法は？", effectId: "ai_friend", effectDesc: "柔軟な発想が飛び交うため、両チームのスキル成功確率の上限(キャップ)が80%から95%に解放される。" },
+    { title: "激安アプリと倫理", q: "Temuなど中国系アプリの商品は非常に安価ですが、背後には倫理的問題が潜んでいます。安さと倫理、どちらを優先すべきか？", effectId: "temu", effectDesc: "激しい議論が巻き起こるため、毎ターンのチームSP回復量が「通常より+2」される。" },
+    { title: "資産としての「持ち家」", q: "日本において持ち家は今も合理的な資産手段であるか？ 現代の状況を踏まえて議論してください。", effectId: "house", effectDesc: "堅実な論拠が求められ勢いだけでは突破できないため「リーダーライオン」「わくわくうさぎ」の論理力が0.8倍になる。" },
+    { title: "就職の軸", q: "就職する際、安定した収入とやりがいのどちらを優先しますか？理由についても考えてください。", effectId: "job", effectDesc: "全員が語りやすい身近なテーマのため、スキルの消費SPが常に-1される（最低消費SPは1）。" }
+];
+
+const RULE_PAGES = [
+    "🎮 <b>【ディベートバトルとは？】</b><br><br>これはRPG風のコマンドバトルゲームです。<br><br>チーム全体で共有する<b>「LP（論理整合性：体力のようなもの）」</b>を削り合い、相手チームのLPを0にすれば「論破」完了です！<br><br>逆に、味方チームのLPが0になると敗北してしまいます。",
+    "⏱️ <b>【行動順（タイムライン）について】</b><br><br>画面真ん中の「タイムライン」は、次に行動する順番を表しています。<br><br>順番はキャラクターの<b>「スピード」</b>が高いほど早く回ってきやすいですが、毎ラウンド<b>確率でランダムに変動</b>します！<br><br>思い通りにならない順番の中で、どう立ち回るかが腕の見せ所です。",
+    "🔋 <b>【SP（発言権）の基本】</b><br><br>スキルを使うには<b>「SP（発言権）」</b>が必要です。SPは個人のものではなく、<b>チーム全員でひとつのゲージを共有</b>します。<br><br>減ったSPは、次のラウンド（全員が行動し終わった後）の開始時に<b>MAXまで全回復</b>します。出し惜しみせずに使っていきましょう！",
+    "💰 <b>【SPの消費と「コスト管理」】</b><br><br>「通常反論」などはSPを1消費しますが、強力なスキルの消費SPは<b>毎回変動</b>します。<br><br>キャラクターの<b>「コスト管理」や「運」</b>の能力が高いほど、消費SPが少なく済む（節約できる）確率が上がります。得意なキャラに大技を任せましょう！",
+    "⚠️ <b>【超重要：発言権の保証ルール】</b><br><br>ディベートでは「全員が発言する」ことがルールです。そのため、<b>「まだ行動していない味方の人数」</b>と同じ数だけ、必ずSPを残さなければいけません。<br><br>SPを使いすぎて後の仲間が何も言えなくなるようなスキルは、選ぶこと自体ができなくなります。",
+    "🎯 <b>【ターゲットとスキルの成功率】</b><br><br>特定の相手を狙うスキルは、下のキャラクターアイコンをクリックして対象を選びます。<br><br>また、相手の能力を下げる（デバフ）などのスキルの成功確率は、自分と相手の<b>「発想力＋運」の差</b>によって、毎回 30%〜80% の間で変動します！",
+    "🛡️ <b>【チームで守る「メンタル」】</b><br><br>相手から受けるダメージは、個人の防御力ではなく<b>「場に出ている味方チーム全員の『メンタル』の合計」</b>によって軽減されます。<br><br>誰か一人が優れていてもダメです。チーム全体の総合的な打たれ強さが、ディベートを生き抜くカギになります。",
+    "✨ <b>【ゼミ生のタイプ（前半）】</b><br><br>🦁 <b>リーダーライオン：</b>超攻撃型。<br>敵からの妨害や能力低下を一切受け付けません。防御やカウンターを貫通する大ダメージ技も持っています。<br><br>🐰 <b>わくわくうさぎ：</b>スピード＆妨害型。<br>行動順が早くなりやすく、相手全体を「迷走（毒）」状態にして毎ターンじわじわと追い詰めます。",
+    "✨ <b>【ゼミ生のタイプ（後半）】</b><br><br>🐶 <b>お世話いぬ：</b>回復＆防御型。<br>チームLPを大回復したり、ダメージを激減させます。また、チームのLPが0になっても1バトルに1回だけ<b>「LP1」で必ず耐える（食いしばり）</b>特性を持ちます。<br><br>🐿️ <b>ロジカルりす：</b>デバフ＆連続攻撃型。<br>連続攻撃や、味方の次の一撃を3倍にする支援が得意。自身が放つ能力低下スキルは<b>必ず成功（必中）</b>します。",
+    "🌍 <b>【ディベートテーマ（フィールド効果）】</b><br><br>毎ステージ、お題（ディベートテーマ）がランダムに選ばれます。<br><br>テーマによって、「特定のタイプの能力が上がる」「毎ターン回復するSPが増減する」など、バトル全体に影響を与える<b>フィールド効果</b>が発生します。状況に合わせた戦い方を考えましょう！",
+    "🔥 <b>【強敵との戦い】</b><br><br>Stage 5 には、圧倒的ステータスを誇る「小澤先生」が待ち受けます。<br><br>先生は<b>SPを消費せず、1ラウンドに3回も行動</b>してくる規格外の存在です。さらに、こちらが有利になる効果（バフ）を使うと、それを全て消し飛ばす恐ろしい技を放ちます。心して挑んでください！"
+];
+
+let selectedThemes = [];
+let currentThemeObj = null;
+
+let unlockedIds=JSON.parse(localStorage.getItem('ozawa_zukan'))||[];
+let newlyUnlockedIds=JSON.parse(localStorage.getItem('ozawa_new'))||[]; 
+let clearedIds=JSON.parse(localStorage.getItem('ozawa_cleared'))||[]; 
+
+function unlockZemi(id){
+    if(!unlockedIds.includes(id)){
+        unlockedIds.push(id); newlyUnlockedIds.push(id); 
+        localStorage.setItem('ozawa_zukan',JSON.stringify(unlockedIds));
+        localStorage.setItem('ozawa_new',JSON.stringify(newlyUnlockedIds));
+    }
+}
+
+window.resetCollection = function() {
+    playSE('result_bad'); 
+    setTimeout(() => {
+        if(confirm("図鑑の進行状況を本当にリセットしますか？\n※獲得した金バッジもすべて失われます。")){
+            playSE('reset'); unlockedIds=[]; newlyUnlockedIds=[]; clearedIds=[];
+            localStorage.removeItem('ozawa_zukan'); localStorage.removeItem('ozawa_new'); localStorage.removeItem('ozawa_cleared');
+            setTimeout(() => { openCollection(true); }, 300);
+        } else {
+            playSE('back_top');
+        }
+    }, 50);
+}
+
+let ozawaMessages=[{text:"ディベートバトルへようこそ！",img:"picture/ozawasensei/ozawa_default.png"},{text:"全員が発言できるよう、SPを管理するんだぞ。",img:"picture/ozawasensei/ozawa_laugh.png"},{text:"クラスの特性を活かすのが勝利への近道だ！",img:"picture/ozawasensei/ozawa_default.png"},{text:"さあ、論理の力を見せてみたまえ！",img:"picture/ozawasensei/ozawa_laugh.png"}],ozawaMsgIndex=0;
+
+function talkToProf(){
+    playSE('prof_click'); ozawaMsgIndex=(ozawaMsgIndex+1)%ozawaMessages.length;
+    let d=ozawaMessages[ozawaMsgIndex];
+    document.getElementById("ozawa-bubble").innerHTML=d.text;
+    document.getElementById("ozawa-img").src=d.img;
+    let wrapper = document.getElementById("ozawa-wrapper");
+    wrapper.style.animation = 'none'; wrapper.offsetHeight; wrapper.style.animation = 'float 3s ease-in-out infinite';
+}
+
+let currentTurnCosts = { s1: 0, s2: 0, s3: 0, u: 0 };
+let currentStage=1,playerParty=[],enemyParty=[],maxPlayerLP=0,playerLP=0,maxEnemyLP=0,enemyLP=0,maxSP=0,teamSP=0,enemySP=0,roundCount=1,actionQueue=[],currentActor=null,currentActorObj=null;
+let pState={defMult:1.0,reflect:false,atkBuff:1.0,nextAtk3x:false,dogEndure:false,dogActive:false,poison:0,daibogyoCount:0},eState={defMult:1.0,reflect:false,atkBuff:1.0,nextAtk3x:false,dogEndure:false,dogActive:false,poison:0,daibogyoCount:0},pStatus=[],eStatus=[],selectedTarget=null;
+let isGameOver=false;
+let pastEnemyIds=[]; 
+
+let draftOrder = [
+    { type: 'リーダーライオン', first: 1 }, 
+    { type: 'わくわくうさぎ', first: 2 }, 
+    { type: 'お世話いぬ', first: 1 }, 
+    { type: 'ロジカルりす', first: 2 }
+];
+let currentDraftRound = 0;
+let currentDraftTurn = 0; 
+let draftPool = [];
+let selectedDraftChar = null;
+
+function applyStatus(arr, tName, type, dur) {
+    let existing = arr.find(s => s.target === tName && s.type === type);
+    let isCurrent = (currentActor && currentActor.name === tName);
+    if(existing) { existing.duration = Math.max(existing.duration, dur); if(isCurrent) existing.justApplied = true; }
+    else { arr.push({target: tName, type: type, duration: dur, justApplied: isCurrent}); }
+}
+
+function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    let topBtn = document.getElementById('top-return-btn'), interruptBtn = document.getElementById('interrupt-btn'), container = document.getElementById('game-container');
+    
+    if(id==='start-screen'){
+        document.getElementById('ozawa-wrapper').style.display='flex';
+        if(topBtn) topBtn.style.display='inline-block';
+        if(interruptBtn) interruptBtn.style.display='none';
+        if(container) container.classList.add('start-mode');
+    }
+    else if (id==='collection-screen') {
+        document.getElementById('ozawa-wrapper').style.display='none';
+        if(topBtn) topBtn.style.display='none';
+        if(interruptBtn) interruptBtn.style.display='none';
+        if(container) container.classList.remove('start-mode');
+    }
+    else {
+        document.getElementById('ozawa-wrapper').style.display='none';
+        if(topBtn) topBtn.style.display='none';
+        if(interruptBtn) interruptBtn.style.display='inline-block';
+        if(container) container.classList.remove('start-mode');
+    }
+}
+
+function backToStart(){ bgm.pause(); showScreen('start-screen'); }
+
+window.interruptGame = function() {
+    playSE('reset');
+    setTimeout(() => {
+        if (confirm("本当にスタート画面に戻りますか？\n現在の進行状況はすべて失われます。")) {
+            isGameOver = true; window.scrollTo(0, 0); playSE('back_start'); backToStart();
+        } else { playSE('back_top'); }
+    }, 50);
+};
+
+function openCollection(skipSound = false){
+    if(!skipSound) playSE('neutral');
+    showScreen('collection-screen');
+    let backBtn = document.getElementById('collection-back-btn');
+    if(backBtn) {
+        backBtn.style.display = 'block';
+        backBtn.onclick = () => { playSE('back_top'); backToStart(); backBtn.style.display = 'none'; };
+    }
+    let grid=document.getElementById("grid-layout"); grid.innerHTML="";
+    let total = ZEMI_DATABASE.length; let unlocked = unlockedIds.length; let percent = Math.floor((unlocked / total) * 100);
+    document.getElementById("collection-progress").innerText = `収集率: ${unlocked} / ${total} (${percent}%)`;
+    let sortedDB = [...ZEMI_DATABASE].sort((a, b) => {
+        if(a.grade !== b.grade) return a.grade - b.grade;
+        if(a.furigana < b.furigana) return -1;
+        if(a.furigana > b.furigana) return 1;
+        return 0;
+    });
+
+    let currentDisplayGrade = null; let isOzawaUnlocked = unlockedIds.includes("prof_ozawa");
+
+    sortedDB.forEach(z=>{
+        if (z.grade !== currentDisplayGrade) {
+            currentDisplayGrade = z.grade;
+            let sep = document.createElement("div");
+            sep.style.cssText = "grid-column: 1 / -1; border-bottom: 2px dashed #b0d8ff; padding-bottom: 5px; margin-top: 15px; font-weight: 900; color: var(--main-blue); font-size: 1.1rem;";
+            sep.innerText = z.grade === 99 ? (isOzawaUnlocked ? "先生" : "???") : z.grade + "年生";
+            grid.appendChild(sep);
+        }
+        let isL=!unlockedIds.includes(z.id); let c=document.createElement("div");
+        let isOzawa = z.id === "prof_ozawa"; let cardClass = isOzawa ? "zemi-thumb-card ozawa-card" : "zemi-thumb-card";
+        if(isL) cardClass += " locked";
+        let nameHtml = isOzawa && !isL ? `<span class="ozawa-aura">${z.name}</span>` : (isL ? '？？？？' : z.name);
+        let newBadgeHtml = (!isL && newlyUnlockedIds.includes(z.id)) ? `<div class="new-badge">New!</div>` : '';
+        let goldBadgeHtml = (!isL && clearedIds.includes(z.id)) ? `<div class="gold-badge">👑</div>` : '';
+
+        c.className = cardClass;
+        c.innerHTML=`${goldBadgeHtml}${newBadgeHtml}<div class="avatar-box"><img src="${z.img}"></div><div class="zemi-name">${nameHtml}</div>`;
+        if(!isL) { c.onclick=()=>{ openCharDetail(z, true); }; }
+        grid.appendChild(c);
+    });
+}
+
+function openCharDetail(z, isFromCollection = false, isBattleView = false) {
+    playSE('insta');
+    let modal = document.getElementById("detail-modal-card"); let isOzawa = z.id === "prof_ozawa";
+    if (isOzawa) {
+        modal.classList.add('ozawa-card'); document.getElementById("m-name").innerHTML = `<span class="ozawa-aura">${z.name}</span>`; document.getElementById("m-grade").innerText = "先生";
+    } else {
+        modal.classList.remove('ozawa-card'); document.getElementById("m-name").innerText = z.name; document.getElementById("m-grade").innerText = z.grade + "年生";
+    }
+    document.getElementById("m-img").src = z.img; document.getElementById("m-furigana").innerText = z.furigana; document.getElementById("m-type").innerText = z.type;
+    document.getElementById("s-lon").innerText = z.stats.lon; document.getElementById("s-hat").innerText = z.stats.hat; document.getElementById("s-men").innerText = z.stats.men;
+    document.getElementById("s-spe").innerText = z.stats.spe; document.getElementById("s-cos").innerText = z.stats.cos; document.getElementById("s-un").innerText = z.stats.un;
+    document.getElementById("m-skill").innerText = z.uniqueSkill; document.getElementById("m-skill-desc").innerText = z.skillDesc || ""; document.getElementById("m-intro").innerText = z.intro;
+    
+    document.getElementById("detail-modal").style.display = "flex";
+
+    if(isFromCollection) {
+        let idx = newlyUnlockedIds.indexOf(z.id);
+        if(idx !== -1) {
+            newlyUnlockedIds.splice(idx, 1); localStorage.setItem('ozawa_new', JSON.stringify(newlyUnlockedIds)); openCollection(true);
+        }
+    }
+}
+
+function closeModal(e){
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+    playSE('back_top');
+    document.getElementById("detail-modal").style.display="none";
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        if(document.getElementById('detail-modal').style.display === 'flex') closeModal(e);
+        if(document.getElementById('rulebook-modal').style.display === 'flex') closeRulebook();
+    }
+});
+
+function selectTarget(t,s,i=-1){
+    if(!currentActor) return;
+    if(!isVersusMode && !currentActor.isP) return;
+    
+    playSE('select'); selectedTarget={type:t,side:s,index:i}; updateTargetUI(); 
+    setupCommands(currentActor.isP);
+}
+
+function updateTargetUI(){
+    document.querySelectorAll('.target-selected').forEach(e=>e.classList.remove('target-selected'));
+    let detailBtn = document.getElementById("view-char-detail-btn");
+    
+    if(detailBtn) { detailBtn.style.opacity = "0.5"; detailBtn.style.pointerEvents = "none"; }
+
+    if(!selectedTarget)return;
+    
+    if(selectedTarget.type==='team'){
+        document.getElementById(`${selectedTarget.side}-team-zone`).classList.add('target-selected');
+    }else if(selectedTarget.type==='char'){
+        document.getElementById(`${selectedTarget.side}-char-${selectedTarget.index}`).classList.add('target-selected');
+        if(detailBtn) { detailBtn.style.opacity = "1"; detailBtn.style.pointerEvents = "auto"; }
+    }
+}
+
+window.viewSelectedCharDetail = function() {
+    if (!selectedTarget || selectedTarget.type !== 'char') return;
+    let targetChar = selectedTarget.side === 'p' ? playerParty[selectedTarget.index] : enemyParty[selectedTarget.index];
+    openCharDetail(targetChar, false, true); 
+};
+
+let currentRulePage = 0;
+
+window.openRulebook = function(e) {
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+    playSE('neutral'); currentRulePage = 0; renderRulePage(); document.getElementById('rulebook-modal').style.display = 'flex';
+};
+
+function renderRulePage() {
+    document.getElementById('rulebook-content').innerHTML = RULE_PAGES[currentRulePage];
+    document.getElementById('rulebook-page-indicator').innerText = (currentRulePage + 1) + " / " + RULE_PAGES.length;
+    document.getElementById('rulebook-content').scrollTop = 0;
+    
+    let prevBtn = document.getElementById('rulebook-prev-btn');
+    let nextBtn = document.getElementById('rulebook-next-btn');
+    if(prevBtn) { prevBtn.style.visibility = currentRulePage === 0 ? 'hidden' : 'visible'; }
+    if(nextBtn) {
+        if(currentRulePage === RULE_PAGES.length - 1) { nextBtn.innerText = "閉じる ×"; } 
+        else { nextBtn.innerText = "次へ →"; }
+    }
+}
+
+window.prevRulePage = function(e) {
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+    if (currentRulePage > 0) { currentRulePage--; playSE('back_top'); renderRulePage(); }
+};
+
+window.nextRulePage = function(e) {
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+    if (currentRulePage < RULE_PAGES.length - 1) {
+        currentRulePage++; playSE('select'); renderRulePage();
+    } else { closeRulebook(); }
+};
+
+function closeRulebook() { playSE('back_top'); document.getElementById('rulebook-modal').style.display = 'none'; }
+
+function startNewGame(){
+    if (isExiting) return; playSE('start');
+    isVersusMode = false;
+    currentStage=1; playerParty=[]; pastEnemyIds=[]; isGameOver=false;
+    let shuffledThemes = [...THEMES].sort(() => 0.5 - Math.random()); selectedThemes = shuffledThemes.slice(0, 5);
+    let lions=ZEMI_DATABASE.filter(z=>z.type==="リーダーライオン"); let hero=lions[Math.floor(Math.random()*lions.length)];
+    let isNewForBattle = !unlockedIds.includes(hero.id);
+    playerParty.push(JSON.parse(JSON.stringify(hero))); unlockZemi(hero.id);
+    showScreen('intro-screen');
+    let container = document.getElementById('intro-card-container');
+    let newBadgeHtml = isNewForBattle ? `<div class="new-badge">New!</div>` : '';
+    container.innerHTML = `<div class="zemi-thumb-card" style="margin: 0 auto; width: 160px; cursor: pointer;">${newBadgeHtml}<div class="avatar-box" style="width: 110px; height: 110px; margin: 0 auto 10px;"><img src="${hero.img}"></div><div class="zemi-name" style="font-size: 1.05rem;">${hero.name}</div></div>`;
+    document.getElementById('intro-text').innerText = `今回は ${hero.name} がディベートリーダーだ！`;
+}
+
+window.startVersusGame = function() {
+    if (isExiting) return; playSE('start');
+    isVersusMode = true;
+    playerParty = []; enemyParty = []; isGameOver = false;
+    currentDraftRound = 0; currentDraftTurn = 0;
+    
+    let shuffledThemes = [...THEMES].sort(() => 0.5 - Math.random()); selectedThemes = shuffledThemes.slice(0, 1);
+    
+    document.getElementById("p1-lp-label").innerText = "1PチームLP";
+    document.getElementById("enemy-team-name").innerText = "2PチームLP";
+    document.getElementById("sp-team-label").innerText = "チーム発言権";
+    
+    initDraftRound();
+};
+
+function initDraftRound() {
+    showScreen('draft-screen');
+    selectedDraftChar = null;
+    let turnData = draftOrder[currentDraftRound];
+    let is1PTurn = (currentDraftTurn === 0) ? (turnData.first === 1) : (turnData.first !== 1);
+    
+    document.getElementById('draft-turn-disp').innerText = is1PTurn ? "1Pのドラフトターン！" : "2Pのドラフトターン！";
+    document.getElementById('draft-turn-disp').style.color = is1PTurn ? "#4aa8ff" : "#ff6b81";
+    document.getElementById('draft-turn-type').innerText = turnData.type;
+    
+    if(currentDraftTurn === 0) {
+        let cands = ZEMI_DATABASE.filter(z => z.type === turnData.type && z.type !== "大論破王");
+        cands.sort(() => 0.5 - Math.random());
+        draftPool = cands.slice(0, 4).map(c => ({ ...c, pickedBy: null }));
+    }
+    
+    updateDraftUI();
+}
+
+window.updateDraftUI = function() {
+    let poolGrid = document.getElementById('draft-pool-grid');
+    poolGrid.innerHTML = '';
+    
+    draftPool.forEach((char, idx) => {
+        let c = document.createElement('div');
+        c.className = 'draft-char-card';
+        if(char.pickedBy === 1) c.classList.add('picked-p1');
+        if(char.pickedBy === 2) c.classList.add('picked-p2');
+        if(selectedDraftChar && selectedDraftChar.source === 'pool' && selectedDraftChar.index === idx) {
+            c.classList.add('selected');
+        }
+        
+        c.innerHTML = `<div class="draft-avatar"><img src="${char.img}"></div><div class="draft-name">${char.name}</div>`;
+        c.onclick = () => selectDraftChar('pool', idx);
+        poolGrid.appendChild(c);
+    });
+    
+    let p1List = document.getElementById('draft-p1-list'); p1List.innerHTML = '';
+    playerParty.forEach((char, idx) => {
+        let c = document.createElement('div'); c.className = 'draft-char-card'; c.style.padding = "10px";
+        if(selectedDraftChar && selectedDraftChar.source === 'p1' && selectedDraftChar.index === idx) c.classList.add('selected');
+        c.innerHTML = `<div class="draft-avatar" style="width:60px; height:60px;"><img src="${char.img}"></div><div class="draft-name" style="font-size:0.8rem;">${char.name}</div>`;
+        c.onclick = () => selectDraftChar('p1', idx); p1List.appendChild(c);
+    });
+    
+    let p2List = document.getElementById('draft-p2-list'); p2List.innerHTML = '';
+    enemyParty.forEach((char, idx) => {
+        let c = document.createElement('div'); c.className = 'draft-char-card'; c.style.padding = "10px";
+        if(selectedDraftChar && selectedDraftChar.source === 'p2' && selectedDraftChar.index === idx) c.classList.add('selected');
+        c.innerHTML = `<div class="draft-avatar" style="width:60px; height:60px;"><img src="${char.img}"></div><div class="draft-name" style="font-size:0.8rem;">${char.name}</div>`;
+        c.onclick = () => selectDraftChar('p2', idx); p2List.appendChild(c);
+    });
+    
+    let detailBtn = document.getElementById("draft-detail-btn");
+    let decideBtn = document.getElementById("draft-decide-btn");
+    
+    if(selectedDraftChar) {
+        detailBtn.style.opacity = "1"; detailBtn.style.pointerEvents = "auto";
+        if(selectedDraftChar.source === 'pool' && !draftPool[selectedDraftChar.index].pickedBy) {
+            decideBtn.style.opacity = "1"; decideBtn.style.pointerEvents = "auto";
+        } else {
+            decideBtn.style.opacity = "0.5"; decideBtn.style.pointerEvents = "none";
+        }
+    } else {
+        detailBtn.style.opacity = "0.5"; detailBtn.style.pointerEvents = "none";
+        decideBtn.style.opacity = "0.5"; decideBtn.style.pointerEvents = "none";
+    }
+};
+
+window.selectDraftChar = function(source, index) {
+    playSE('select');
+    selectedDraftChar = { source: source, index: index, char: source === 'pool' ? draftPool[index] : (source === 'p1' ? playerParty[index] : enemyParty[index]) };
+    updateDraftUI();
+};
+
+window.viewDraftCharDetail = function() {
+    if(!selectedDraftChar) return;
+    openCharDetail(selectedDraftChar.char, false, true);
+};
+
+window.decideDraftPick = function() {
+    if(!selectedDraftChar || selectedDraftChar.source !== 'pool') return;
+    let char = draftPool[selectedDraftChar.index];
+    if(char.pickedBy) return;
+    
+    playSE('select');
+    let turnData = draftOrder[currentDraftRound];
+    let is1PTurn = (currentDraftTurn === 0) ? (turnData.first === 1) : (turnData.first !== 1);
+    
+    char.pickedBy = is1PTurn ? 1 : 2;
+    if(is1PTurn) playerParty.push(JSON.parse(JSON.stringify(char)));
+    else enemyParty.push(JSON.parse(JSON.stringify(char)));
+    
+    // 🌟 ここにあった unlockZemi(char.id); を削除し、PvPでは図鑑登録されないようにしました
+    selectedDraftChar = null;
+    
+    if(currentDraftTurn === 0) {
+        currentDraftTurn = 1;
+        initDraftRound();
+    } else {
+        currentDraftRound++;
+        currentDraftTurn = 0;
+        if(currentDraftRound >= draftOrder.length) {
+            updateDraftUI();
+            document.getElementById('draft-controls').style.display = 'none';
+            document.getElementById('draft-ready-container').style.display = 'block';
+        } else {
+            initDraftRound();
+        }
+    }
+};
+
+window.finishDraft = function() {
+    playSE('neutral');
+    document.getElementById('draft-ready-container').style.display = 'none';
+    document.getElementById('draft-controls').style.display = 'flex';
+    setTimeout(() => { setupScenario(false, false); }, 300);
+};
+
+function openCharDetailFromIntro() { let hero = playerParty[0]; openCharDetail(hero, false); }
+
+function advanceFromIntro(e) {
+    if(document.getElementById('detail-modal').style.display === 'flex') { closeModal(e); return; }
+    if(document.getElementById('rulebook-modal').style.display === 'flex') { closeRulebook(); return; }
+    playSE('select'); let addedData = setupStageData(); setupScenario(false, false, addedData);
+}
+
+let pendingAddedData = null;
+
+function setupStageData(){
+    let nm = null;
+    let addType = null;
+    let isNewlyAdded = false;
+    
+    if(currentStage === 2) addType = "わくわくうさぎ";
+    if(currentStage === 3) addType = "お世話いぬ";
+    if(currentStage === 4) addType = "ロジカルりす";
+    
+    if(addType){
+        let pN = playerParty.map(p => p.name);
+        let cands = ZEMI_DATABASE.filter(z => z.type === addType && !pN.includes(z.name) && z.type !== "大論破王");
+        if(cands.length > 0){
+            let p = cands[Math.floor(Math.random() * cands.length)];
+            isNewlyAdded = !unlockedIds.includes(p.id);
+            playerParty.push(JSON.parse(JSON.stringify(p)));
+            unlockZemi(p.id);
+            nm = p.name;
+        }
+    }
+    
+    enemyParty = [];
+    if(currentStage === 5){
+        enemyParty.push(JSON.parse(JSON.stringify(ZEMI_DATABASE.find(z => z.id === "prof_ozawa"))));
+    } else {
+        playerParty.forEach(p => {
+            let pN = playerParty.map(x => x.name);
+            let cands = ZEMI_DATABASE.filter(z => 
+                z.type === p.type && 
+                z.type !== "大論破王" && 
+                !pN.includes(z.name) && 
+                !pastEnemyIds.includes(z.id) &&
+                !enemyParty.find(e => e.name === z.name) 
+            );
+            if(cands.length > 0){
+                let e = cands[Math.floor(Math.random() * cands.length)];
+                enemyParty.push(JSON.parse(JSON.stringify(e)));
+                pastEnemyIds.push(e.id);
+            }
+        });
+    }
+    
+    maxPlayerLP = 150 * (playerParty.length + 1);
+    maxEnemyLP = (currentStage === 5) ? 2000 : 150 * (enemyParty.length + 1);
+    maxSP = currentStage * 2 + 2; 
+    
+    return { name: nm, isNew: isNewlyAdded };
+}
+
+function setupScenario(isW = false, isL = false, addedData = null) {
+    showScreen('scenario-screen');
+    let box = document.getElementById('scenario-box');
+    let companionArea = document.getElementById('companion-area');
+    let companionCard = document.getElementById('companion-card');
+    companionArea.style.display = 'none';
+
+    if(isL){
+        box.classList.remove('boss-bg');
+        document.getElementById('scenario-theme').innerText = "敗北...";
+        document.getElementById('scenario-text').innerHTML = "「まだまだ論理が甘いな！出直してきな！」";
+        document.getElementById('scenario-next-btn').innerText = "スタート画面に戻る";
+        document.getElementById('scenario-next-btn').onclick = () => { playSE('back_start'); backToStart(); };
+        return;
+    }
+    
+    if(!isVersusMode && currentStage > 5){
+        box.classList.add('boss-bg');
+        document.getElementById('scenario-theme').innerText = "完全論破！！";
+        let isNewForBattle = !unlockedIds.includes("prof_ozawa");
+        unlockZemi("prof_ozawa");
+        playerParty.forEach(p => { if(!clearedIds.includes(p.id)) { clearedIds.push(p.id); } });
+        localStorage.setItem('ozawa_cleared', JSON.stringify(clearedIds));
+
+        let textHtml = "小澤先生「見事だ！私を論破するとは。君たちこそ小澤ゼミの誇りだ！」<br><br>全ステージクリアおめでとう！<br><span style='font-size: 0.95rem; color: #ffcccc;'>※共に戦い抜いたゼミ生には図鑑で特別なバッジが付与されます！</span>";
+        if(isNewForBattle) { textHtml += "<br><br><span style='color:#fbbf24; font-weight:900; font-size:1.4rem;'>✨ 小澤先生が図鑑に登録されました！ ✨</span>"; }
+        document.getElementById('scenario-text').innerHTML = textHtml;
+        document.getElementById('scenario-next-btn').innerText = "スタート画面に戻る";
+        companionArea.style.display = 'none';
+        document.getElementById('scenario-next-btn').onclick = () => { playSE('back_start'); backToStart(); };
+        return;
+    }
+    
+    currentThemeObj = selectedThemes[isVersusMode ? 0 : currentStage - 1]; 
+
+    if(isW){
+        box.classList.remove('boss-bg');
+        document.getElementById('scenario-theme').innerText = "Stage Clear!";
+        document.getElementById('scenario-text').innerHTML = `敵チームを論破した！<br>次のステージに向けて準備をしよう！`;
+        if(addedData && addedData.name){
+            let z = ZEMI_DATABASE.find(z => z.name === addedData.name);
+            if(z){
+                let newBadgeHtml = addedData.isNew ? `<div class="new-badge">New!</div>` : '';
+                companionCard.innerHTML = `${newBadgeHtml}<div class="avatar-box"><img src="${z.img}"></div><div class="zemi-name">${z.name}</div>`;
+                companionCard.className = "zemi-thumb-card";
+                companionCard.onclick = (e) => { e.stopPropagation(); openCharDetail(z, false); };
+                companionArea.style.display = 'block';
+            }
+        }
+        document.getElementById('scenario-next-btn').innerText = "次のステージへ";
+        document.getElementById('scenario-next-btn').onclick = () => { playSE('select'); setupScenario(); };
+        return;
+    }
+    
+    document.getElementById('scenario-theme').innerText = isVersusMode ? `対戦テーマ：${currentThemeObj.title}` : `Stage ${currentStage} テーマ：${currentThemeObj.title}`;
+    let effectBadge = `<br><br><span style="font-size:0.9rem; color:#8b5cf6; font-weight:800; background:rgba(139,92,246,0.1); padding:8px 16px; border-radius:12px; display:inline-block; border: 1px dashed #b0d8ff;">✨ フィールド効果：<br>${currentThemeObj.effectDesc}</span>`;
+
+    if(!isVersusMode && currentStage === 5){
+        playSE('boss'); box.classList.add('boss-bg');
+        let bossEffectBadge = `<br><br><span style="font-size:0.9rem; color:#ffbf00; font-weight:800; background:rgba(255,191,0,0.2); padding:8px 16px; border-radius:12px; display:inline-block; border: 1px dashed #ffbf00;">✨ フィールド効果：<br>${currentThemeObj.effectDesc}</span>`;
+        document.getElementById('scenario-text').innerHTML = `小澤先生「ついにここまで来たか。本物のロジックを見せてやろう！」<br><br>テーマ：${currentThemeObj.q}${bossEffectBadge}`;
+    }else{
+        box.classList.remove('boss-bg');
+        let pL = playerParty[0].name;
+        let eL = enemyParty[0] ? enemyParty[0].name : "敵";
+        
+        let ini = "";
+        if (isVersusMode) {
+            ini = `<span style="color:#4aa8ff;">${pL}「こちらが1Pチームだ！負けないぞ！」</span><br><span style="color:#ff6b81;">${eL}「2Pチームの力、見せてやる！」</span><br><br>`;
+        } else {
+            ini = currentStage === 1 ? `${pL}「さあ、最初のディベートだ！負けないぞ！」<br>${eL}「こちらこそ、論理で圧倒してやる！」<br><br>` : `第${currentStage}回戦だ。相手は${eL}のチームか！気を引き締めていこう！<br><br>`;
+        }
+        document.getElementById('scenario-text').innerHTML = `${ini}お題：「${currentThemeObj.title}」<br>${currentThemeObj.q}${effectBadge}`;
+    }
+    
+    document.getElementById('scenario-next-btn').innerText = "次へ";
+    document.getElementById('scenario-next-btn').onclick = () => { playSE('select'); initBattleStage(); };
+}
+
+function calcBaseSpd(c) {
+    let n = c.stats.spe; let effectiveN = (c.type === "わくわくうさぎ") ? n + 2 : n;
+    let r = Math.max(0.001, Math.random()); let baseSpd = Math.pow(r, 1 / effectiveN) * 100;
+    if (currentThemeObj && currentThemeObj.effectId === "life" && (c.type === "わくわくうさぎ" || c.type === "お世話いぬ")) baseSpd *= 1.2;
+    if (currentThemeObj && currentThemeObj.effectId === "ma" && c.type === "ロジカルりす") baseSpd *= 1.2;
+    return Math.floor(baseSpd);
+}
+
+function getLon(c, isP) {
+    let b = c.stats.lon; 
+    if (currentThemeObj) {
+        if (currentThemeObj.effectId === "business" && c.type === "リーダーライオン") b *= 1.2;
+        if (currentThemeObj.effectId === "ma" && c.type === "ロジカルりす") b *= 1.2;
+        if (currentThemeObj.effectId === "house" && (c.type === "リーダーライオン" || c.type === "わくわくうさぎ")) b *= 0.8;
+    }
+    let arr = isP ? pStatus : eStatus;
+    if(arr.find(s => s.target === c.name && s.type === "atk_up")) b *= 1.5;
+    if(arr.find(s => s.target === c.name && s.type === "atk_down")) b *= 0.5;
+    return Math.floor(b);
+}
+
+function getMen(c) {
+    let m = c.stats.men;
+    if (currentThemeObj && currentThemeObj.effectId === "life" && (c.type === "わくわくうさぎ" || c.type === "お世話いぬ")) m *= 1.2;
+    return Math.floor(m);
+}
+
+function getSpd(c, isP) {
+    let b = c.baseSpd; 
+    let arr = isP ? pStatus : eStatus;
+    if(arr.find(s => s.target === c.name && s.type === "spd_up")) b *= 1.3;
+    if(arr.find(s => s.target === c.name && s.type === "spd_down")) b *= 0.7;
+    return Math.floor(b);
+}
+
+function initBattleStage() {
+    showScreen('battle-screen');
+    
+    if (currentBgmIndex !== 5) {
+        bgm.pause();
+        if (!isVersusMode && currentStage === 5) {
+            bgm.src = `sound/BGM/debate-battle/last-boss.mp3`;
+        } else {
+            bgm.src = `sound/BGM/debate-battle/debate-battle_${currentBgmIndex}.mp3`;
+        }
+        bgm.currentTime = 0;
+        bgm.play().catch(e => console.log("BGM play failed", e));
+    }
+
+    isGameOver = false; roundCount = 1;
+    document.getElementById("stage-indicator").innerText = isVersusMode ? "PvP Battle" : `Stage ${currentStage} / 5`;
+    document.getElementById("battle-log").innerHTML = "";
+    
+    document.getElementById("next-debate-btn").style.display = "none";
+    document.getElementById("vs-end-btn").style.display = "none";
+    document.getElementById("lose-next-btn").style.display = "none";
+    
+    document.getElementById("active-theme-name").innerText = currentThemeObj.title;
+    document.getElementById("active-theme-effect").innerText = currentThemeObj.effectDesc;
+    document.getElementById("active-theme-display").style.display = "flex";
+    
+    if (isVersusMode) {
+        maxPlayerLP = 750; maxEnemyLP = 750;
+        maxSP = 12;
+    } else {
+        maxPlayerLP = 150 * (playerParty.length + 1);
+        maxEnemyLP = (currentStage === 5) ? 2000 : 150 * (enemyParty.length + 1);
+        maxSP = currentStage * 2 + 2; 
+        if (currentThemeObj.effectId === "heavy") maxSP = Math.max(1, maxSP - 1);
+        if (currentThemeObj.effectId === "temu") maxSP += 2;
+    }
+    
+    playerLP = maxPlayerLP; enemyLP = maxEnemyLP;
+    currentActor = null; currentActorObj = null;
+    
+    pState = {defMult:1.0, reflect:false, atkBuff:1.0, nextAtk3x:false, dogEndure:playerParty.some(p=>p.type==="お世話いぬ"), dogActive:false, poison:0, daibogyoCount:0};
+    eState = {defMult:1.0, reflect:false, atkBuff:1.0, nextAtk3x:false, dogEndure:enemyParty.some(e=>e.type==="お世話いぬ"), dogActive:false, poison:0, daibogyoCount:0};
+    pStatus = []; eStatus = []; selectedTarget = null;
+    
+    playerParty.forEach(p => { p.baseSpd = calcBaseSpd(p); p.stun = 0; });
+    enemyParty.forEach(e => { e.baseSpd = calcBaseSpd(e); e.stun = 0; });
+
+    updateLPUI(); updateStatusUI(); renderPartyLists();
+    
+    teamSP = maxSP; enemySP = maxSP;
+    updateSPUI();
+    document.getElementById("round-indicator").innerText = `Round ${roundCount}`;
+    
+    initRoundActionQueue();
+    
+    document.getElementById('start-battle-btn').style.display = 'block';
+    disableCommands();
+}
+
+function startRealBattle() {
+    let btn = document.getElementById('start-battle-btn');
+    if(btn.style.display === 'none') return;
+    
+    playSE('start'); btn.style.display = 'none';
+    logMsg("<span style='color:#4aa8ff;'>◆ ディベートバトル開始！</span>");
+    setTimeout(() => { startRound(); }, 1200);
+}
+
+function initRoundActionQueue() {
+    actionQueue = [];
+    playerParty.forEach((p, i) => { actionQueue.push({isP:true, idx:i, name:p.name, baseSpd: p.baseSpd}); });
+    enemyParty.forEach((e, i) => {
+        if(e.type === "大論破王"){
+            actionQueue.push({isP:false, idx:i, name:e.name, baseSpd: calcBaseSpd(e)});
+            actionQueue.push({isP:false, idx:i, name:e.name, baseSpd: calcBaseSpd(e)});
+            actionQueue.push({isP:false, idx:i, name:e.name, baseSpd: calcBaseSpd(e)});
+        }else{
+            actionQueue.push({isP:false, idx:i, name:e.name, baseSpd: e.baseSpd});
+        }
+    });
+    updateTimelineOrder();
+}
+
+function updateTimelineOrder() {
+    actionQueue.forEach(item => { 
+        let c = item.isP ? playerParty[item.idx] : enemyParty[item.idx]; 
+        let arr = item.isP ? pStatus : eStatus; let buffBonus = 0;
+        if(arr.find(s => s.target === c.name && s.type === "spd_up")) buffBonus += 30;
+        if(arr.find(s => s.target === c.name && s.type === "spd_down")) buffBonus -= 30;
+        item.spd = item.baseSpd + buffBonus;
+    });
+    actionQueue.sort((a,b) => { return b.spd - a.spd; });
+    renderTimeline();
+}
+
+function startRound() {
+    playSE('back_start');
+    teamSP = maxSP; enemySP = maxSP;
+    updateSPUI();
+    document.getElementById("round-indicator").innerText = `Round ${roundCount}`;
+    logMsg(`<br><span style="color:#8b5cf6; font-size:1.1rem; font-weight:900;">◆ Round ${roundCount} 開始！ ◆</span>`);
+    setTimeout(() => { if (roundCount > 1) { initRoundActionQueue(); } nextTurn(); }, 1000);
+}
+
+function reduceStatusDuration(targetName, isPlayer) {
+    let arr = isPlayer ? pStatus : eStatus; let logs = [];
+    for(let i = arr.length - 1; i >= 0; i--){
+        if(arr[i].target === targetName) {
+            if(arr[i].justApplied) { arr[i].justApplied = false; } else {
+                arr[i].duration--;
+                if(arr[i].duration <= 0){
+                    let sName = "";
+                    if(arr[i].type === "atk_up") sName = "攻撃力UP"; if(arr[i].type === "atk_down") sName = "攻撃力DOWN";
+                    if(arr[i].type === "spd_up") sName = "スピードUP"; if(arr[i].type === "spd_down") sName = "スピードDOWN";
+                    if(arr[i].type === "men_down") sName = "メンタルDOWN";
+                    let prefix = isVersusMode ? (isPlayer ? "1Pの" : "2Pの") : (isPlayer ? "味方の" : "敵の");
+                    logs.push(`【${prefix}${targetName}】の${sName}の効果が切れた。`);
+                    arr.splice(i, 1);
+                }
+            }
+        }
+    }
+    if(logs.length > 0){ logMsg(`<span style="color:#888; font-size:0.85rem;">${logs.join("<br>")}</span>`); }
+}
+
+function clearDefensiveStates(tState, tName) {
+    let logs = [];
+    if (tState.reflect) { tState.reflect = false; logs.push(`${tName}のカウンターの構えが解けた。`); }
+    if (tState.defMult === 0.5) { tState.defMult = 1.0; logs.push(`${tName}の防御態勢が解けた。`); 
+    } else if (tState.defMult === 0.2) {
+        tState.daibogyoCount--;
+        if (tState.daibogyoCount <= 0) { tState.defMult = 1.0; logs.push(`${tName}の大防御態勢が解けた。`); }
+    }
+    if (logs.length > 0) { logMsg(`<span style="color:#888; font-size:0.85rem;">${logs.join("<br>")}</span>`); }
+    updateStatusUI();
+}
+
+function renderTimeline() {
+    let list = document.getElementById("timeline-list"); list.innerHTML = "";
+    if(currentActor) {
+        let d = document.createElement("div");
+        d.className = `timeline-item ${currentActor.isP ? 'p-turn' : 'e-turn'} current-active`;
+        let text = currentActor.name;
+        if(currentActorObj && currentActorObj.stun > 0) { text = `❌ <span style="text-decoration:line-through; opacity:0.6;">${text}</span>`; }
+        d.innerHTML = text; list.appendChild(d);
+        let s = document.createElement("div"); s.style.cssText = "text-align:center;font-size:0.7rem;font-weight:900;color:#888;margin:2px 0;"; s.innerText = "▼ NEXT ▼"; list.appendChild(s);
+    }
+    
+    actionQueue.forEach(i => {
+        let cObj = i.isP ? playerParty[i.idx] : enemyParty[i.idx];
+        let d = document.createElement("div"); d.className = `timeline-item ${i.isP ? 'p-turn' : 'e-turn'}`;
+        let text = i.name;
+        if(cObj.stun > 0) { text = `❌ <span style="text-decoration:line-through; opacity:0.6;">${text}</span>`; }
+        d.innerHTML = text; list.appendChild(d);
+    });
+}
+
+function nextTurn() {
+    if(isGameOver) return;
+    if(playerLP <= 0 || enemyLP <= 0){ checkWinLoss(); return; }
+    
+    if(actionQueue.length === 0){
+        document.getElementById("timeline-list").innerHTML = ""; roundCount++; startRound(); return;
+    }
+    
+    currentActor = actionQueue.shift();
+    currentActorObj = currentActor.isP ? playerParty[currentActor.idx] : enemyParty[currentActor.idx];
+    
+    updateStatusUI(); renderTimeline();
+    document.querySelectorAll(".char-sprite").forEach(e => e.classList.remove("active-char"));
+    document.getElementById(`${currentActor.isP ? 'p' : 'e'}-char-${currentActor.idx}`).classList.add("active-char");
+
+    let actorSpan = document.getElementById("current-actor");
+    actorSpan.innerText = currentActor.name;
+    actorSpan.style.color = currentActor.isP ? "#4aa8ff" : "#ff6b81";
+    
+    let turnMsg = isVersusMode 
+        ? `<span style="color:${currentActor.isP ? '#4aa8ff' : '#ff6b81'};"><span style="white-space: nowrap;">―― 【${currentActor.isP ? '1P' : '2P'}：${currentActor.name}】のターン！</span><wbr><span style="white-space: nowrap;">コマンドを選択してください ――</span></span>`
+        : `<span style="color:${currentActor.isP ? '#4aa8ff' : '#ff6b81'};"><span style="white-space: nowrap;">―― 【${currentActor.isP ? '味方' : '敵'}：${currentActor.name}】のターン${currentActor.isP ? '！コマンドを選択してください' : ''} ――</span></span>`;
+    logMsg(`<br>${turnMsg}`);
+
+    let tState = currentActor.isP ? pState : eState;
+    if(tState.poison > 0){
+        let dmg = Math.floor((currentActor.isP ? maxPlayerLP : maxEnemyLP) * 0.05);
+        let targetName = isVersusMode ? (currentActor.isP ? "1P" : "2P") : (currentActor.isP ? "味方" : "敵");
+        playSE('poison');
+        logMsg(`⚠ <span style="color:#8b5cf6;">【迷走(毒)ダメージ】 ${targetName}陣営はターン開始時に <span style="color:#c92a2a">${dmg}</span> のダメージを受けた！</span>`);
+        
+        if(currentActor.isP){
+            pState.dogActive = false; applyDamage(dmg, false, "poison"); pState.poison--;
+            if(pState.poison === 0) logMsg(`<span style="color:#888; font-size:0.85rem;">${targetName}チームの迷走(毒)が治った。</span>`);
+        } else {
+            eState.dogActive = false; applyDamage(dmg, true, "poison"); eState.poison--;
+            if(eState.poison === 0) logMsg(`<span style="color:#888; font-size:0.85rem;">${targetName}チームの迷走(毒)が治った。</span>`);
+        }
+        updateStatusUI(); 
+        if(playerLP <= 0 || enemyLP <= 0){ checkWinLoss(); return; }
+    }
+
+    if(currentActorObj.stun > 0) {
+        let teamName = isVersusMode ? (currentActor.isP ? "1Pの" : "2Pの") : (currentActor.isP ? "味方の" : "敵の");
+        playSE('stun'); logMsg(`▶ 【${teamName}${currentActor.name}】は行動不能で動けない！`);
+        currentActorObj.stun--;
+        if(currentActorObj.stun === 0) { logMsg(`<span style="color:#ff6b81; font-weight:bold;">${teamName}${currentActor.name} の行動不能が治った！</span>`); }
+        updateStatusUI();
+        
+        setTimeout(()=>{
+            reduceStatusDuration(currentActor.name, currentActor.isP);
+            let defMsg1 = isVersusMode ? "2Pチーム" : "敵チーム";
+            let defMsg2 = isVersusMode ? "1Pチーム" : "味方チーム";
+            if(currentActor.isP){
+                pState.dogActive = false; eState.dogActive = false;
+                if (eState.reflect || eState.defMult < 1.0) logMsg(`<span style="color:#888; font-size:0.85rem;">※行動不能のため、${defMsg1}の防御態勢は消費されず維持された。</span>`);
+            } else {
+                pState.dogActive = false; eState.dogActive = false;
+                if (pState.reflect || pState.defMult < 1.0) logMsg(`<span style="color:#888; font-size:0.85rem;">※行動不能のため、${defMsg2}の防御態勢は消費されず維持された。</span>`);
+            }
+            currentActor = null; nextTurn();
+        }, 1200);
+        return;
+    }
+
+    let cos = currentActorObj.stats.cos; let un = currentActorObj.stats.un; let isBoss = currentActorObj.type === "大論破王"; let sL = SKILLS[currentActorObj.type] || [];
+    currentTurnCosts.s1 = isBoss ? 0 : (sL[0] ? getFluctuatedSP(2, 4, sL[0].baseCost, cos, un) : 0);
+    currentTurnCosts.s2 = isBoss ? 0 : (sL[1] ? getFluctuatedSP(2, 4, sL[1].baseCost, cos, un) : 0);
+    currentTurnCosts.s3 = isBoss ? 0 : (sL[2] ? getFluctuatedSP(2, 4, sL[2].baseCost, cos, un) : 0);
+    let uBase = UNIQUE_SKILL_BASE[currentActorObj.uniqueSkill] || 4;
+    currentTurnCosts.u = isBoss ? 0 : getFluctuatedSP(3, 5, uBase, cos, un);
+
+    if(isVersusMode) {
+        setupCommands(currentActor.isP);
+    } else {
+        if(currentActor.isP){
+            setupCommands(true);
+        } else {
+            disableCommands(); setTimeout(()=>{ executeEnemyTurn(); }, 1000);
+        }
+    }
+}
+
+function calcDebuffProb(actor, target, baseProb) {
+    if(!target) return baseProb;
+    let aVal = actor.stats.hat + actor.stats.un; let tVal = target.stats.hat + target.stats.un; let diff = aVal - tVal; let prob = baseProb + (diff * 10);
+    if (currentThemeObj.effectId === "sns" && actor.type === "わくわくうさぎ") prob += 15;
+    let cap = (currentThemeObj.effectId === "ai_friend") ? 95 : 80;
+    if(prob < 30) prob = 30; if(prob > cap) prob = cap; 
+    return Math.floor(prob);
+}
+
+function getTeamHatUnAvg(party) {
+    if(party.length === 0) return 0;
+    let sum = 0; party.forEach(p => { sum += p.stats.hat + p.stats.un; });
+    return Math.floor(sum / party.length);
+}
+
+function calcTeamProb(actor, targetParty, baseProb) {
+    if(!targetParty || targetParty.length === 0) return baseProb;
+    let aVal = actor.stats.hat + actor.stats.un; let tVal = getTeamHatUnAvg(targetParty); let diff = aVal - tVal; let prob = baseProb + (diff * 10);
+    if (currentThemeObj.effectId === "sns" && actor.type === "わくわくうさぎ") prob += 15;
+    let cap = (currentThemeObj.effectId === "ai_friend") ? 95 : 80;
+    if(prob < 30) prob = 30; if(prob > cap) prob = cap; 
+    return Math.floor(prob);
+}
+
+function getFluctuatedSP(min, max, baseStrength, cos, un) {
+    let score = cos * 2 + un; let shift = 0; let roll = Math.random() * 100;
+    if (score >= 12) { if (roll < 60) shift = -1; else if (roll < 90) shift = 0; else shift = 1; } 
+    else if (score >= 8) { if (roll < 30) shift = -1; else if (roll < 70) shift = 0; else shift = 1; } 
+    else { if (roll < 10) shift = -1; else if (roll < 40) shift = 0; else shift = 1; }
+    let finalSP = baseStrength + shift;
+    if (currentThemeObj.effectId === "job") finalSP -= 1;
+    if (finalSP < min) finalSP = min; if (finalSP > max) finalSP = max;
+    return finalSP;
+}
+
+function setupCommands(isP) {
+    updateSPUI();
+    let sL = SKILLS[currentActorObj.type] || [];
+    let rem = actionQueue.filter(a => a.isP === isP).length;
+    let currentLon = getLon(currentActorObj, isP);
+    let atkTxt = `\n(現在論理力: ${currentLon})`;
+    
+    let isBoss = currentActorObj.type === "大論破王";
+    let myState = isP ? pState : eState;
+    let anyDefActive = myState.defMult < 1.0 || myState.reflect;
+    let defStateName = myState.reflect ? "カウンター" : (myState.defMult === 0.2 ? "大防御" : "防御");
+    
+    let baseSp = isBoss ? 0 : 1;
+    setupBtn("cmd-atk", "通常反論", baseSp, rem, "[ターゲット選択不要]\n敵チームに論理力依存のダメージを与える" + atkTxt, null, true, isP);
+    
+    let defTooltip = "[ターゲット選択不要]\n次の敵の行動終了時まで、受けるダメージを半減する"; let defValid = true;
+    if (anyDefActive) { defTooltip = `既に${defStateName}中だ！`; defValid = false; }
+    setupBtn("cmd-def", "リスクヘッジ", baseSp, rem, defTooltip, null, defValid, isP);
+    
+    for(let i = 0; i < 3; i++) {
+        let s = sL[i]; let id = `cmd-s${i+1}`;
+        if(s) {
+            let desc = s.desc; let cost = currentTurnCosts[`s${i+1}`]; 
+            if(s.name === "クリティカル・ファクト" || s.name === "マシンガン・データ" || s.name === "アジェンダクラッシュ") { desc += atkTxt; }
+            
+            let probStr = s.prob;
+            if (s.name === "アジェンダクラッシュ") {
+                if (selectedTarget && selectedTarget.type === 'char' && selectedTarget.side === (isP ? 'e' : 'p')) {
+                    let targetObj = isP ? enemyParty[selectedTarget.index] : playerParty[selectedTarget.index];
+                    if (targetObj.type === "リーダーライオン") probStr = "無効"; else probStr = Math.floor(calcDebuffProb(currentActorObj, targetObj, 60)) + "%";
+                } else { probStr = "対象選択で変動"; }
+            } else if (s.name === "矛盾点の指摘") {
+                if (selectedTarget && selectedTarget.type === 'char' && selectedTarget.side === (isP ? 'e' : 'p')) {
+                    let targetObj = isP ? enemyParty[selectedTarget.index] : playerParty[selectedTarget.index];
+                    if (targetObj.type === "リーダーライオン") probStr = "無効"; else probStr = "必中";
+                } else { probStr = "必中"; }
+            } else if (s.name === "クリティカル・ファクト" || s.name === "論点スリカエ") {
+                probStr = Math.floor(calcTeamProb(currentActorObj, isP ? enemyParty : playerParty, 50)) + "%";
+            }
+            
+            let valid = checkTgt(s.name, isP);
+            if (["カウンターロジック", "論理の壁", "鉄壁の根回し"].includes(s.name) && anyDefActive) { desc = `既に${defStateName}中だ！`; valid = false; }
+            setupBtn(id, s.name, cost, rem, desc, probStr, valid, isP);
+        } else { hideBtn(id); }
+    }
+    
+    let uCost = currentTurnCosts.u; let uD = "";
+    const healSkills = ["和やかな空気", "論理の再構築", "全体サポート", "癒やしの空間", "リカバリープラン", "グローバル・ケア", "メンタル・リセット", "ピースメーカー", "バックアップ体制"];
+    
+    if(healSkills.includes(currentActorObj.uniqueSkill)) { uD = "[ターゲット選択不要]\n味方チーム全体のLPを大回復し、デバフ・迷走(毒)をすべて解除する。"; } 
+    else if(currentActorObj.type === "大論破王") { uD = "[ターゲット選択不要]\nプレイヤーのバフを全て解除する恐ろしい技！" + atkTxt; } 
+    else { uD = ZEMI_DATABASE.find(z => z.id === currentActorObj.id).intro + "の超強力な固有技！\n[ターゲット選択不要]" + atkTxt; }
+    
+    let uValid = true;
+    if (["カウンターロジック", "論理の壁", "鉄壁の根回し"].includes(currentActorObj.uniqueSkill) && anyDefActive) { uD = `既に${defStateName}中だ！`; uValid = false; }
+    setupBtn("cmd-u", currentActorObj.uniqueSkill, uCost, rem, uD, null, uValid, isP);
+}
+
+function checkTgt(n, isP) {
+    let enemySide = isP ? 'e' : 'p';
+    let mySide = isP ? 'p' : 'e';
+    if(["アジェンダクラッシュ", "矛盾点の指摘"].includes(n)){
+        return selectedTarget && selectedTarget.side === enemySide && selectedTarget.type === 'char';
+    }
+    if(n === "アイスブレイク"){
+        if(!selectedTarget || selectedTarget.side !== mySide) return false;
+        let myStatus = isP ? pStatus : eStatus;
+        let myParty = isP ? playerParty : enemyParty;
+        let myState = isP ? pState : eState;
+        if(selectedTarget.type === 'team') {
+            return myStatus.some(s => ["spd_down","atk_down","men_down"].includes(s.type)) || myParty.some(p => p.stun > 0) || myState.poison > 0;
+        }
+        let tN = myParty[selectedTarget.index].name;
+        return myStatus.some(s => s.target === tN && ["spd_down","atk_down","men_down"].includes(s.type)) || myParty[selectedTarget.index].stun > 0;
+    } 
+    return true;
+}
+
+function setupBtn(id, n, c, r, d, p = null, v = true, isP = true) {
+    let isBoss = currentActorObj && currentActorObj.type === "大論破王";
+    let activeSP = isP ? teamSP : enemySP;
+    
+    if (!isBoss) {
+        if (activeSP < c) { v = false; d = "SPが足りない！"; } 
+        else if (activeSP - c < r) { v = false; d = "SPが足りなくなってしまう。"; }
+    }
+
+    let b = document.getElementById(id);
+    b.style.display = "flex";
+    b.querySelector(".cmd-name").innerText = n;
+    b.querySelector(".cmd-cost").innerHTML = `SP ${c} ${p ? `<span class="cmd-prob">/ ${p}</span>` : ""}`;
+    b.querySelector(".tooltip").innerText = d;
+    b.dataset.cost = c;
+    b.dataset.name = n;
+    
+    if(v) { b.classList.remove("btn-disabled"); } else { b.classList.add("btn-disabled"); }
+}
+
+function hideBtn(id) { document.getElementById(id).style.display = "none"; } 
+function disableCommands() { document.querySelectorAll(".cmd-btn").forEach(b => b.classList.add("btn-disabled")); }
+
+function executePlayerAction(idx) {
+    disableCommands();
+    let b = document.getElementById(["cmd-atk","cmd-def","cmd-s1","cmd-s2","cmd-s3","cmd-u"][idx]);
+    let c = parseInt(b.dataset.cost);
+    let n = b.dataset.name;
+    
+    if (currentActor.isP) teamSP -= c; else enemySP -= c;
+    updateSPUI();
+    
+    let actorName = isVersusMode ? (currentActor.isP ? "1P" : "2P") : "味方";
+    logMsg(`▶ ${actorName}の行動：『${n}』`);
+    processSkill(n, currentActorObj, currentActor.isP);
+    
+    selectedTarget = null;
+    updateTargetUI();
+    
+    setTimeout(()=>{
+        reduceStatusDuration(currentActor.name, currentActor.isP);
+        pState.dogActive = false; eState.dogActive = false; 
+        clearDefensiveStates(currentActor.isP ? eState : pState, isVersusMode ? (currentActor.isP ? "2Pチーム" : "1Pチーム") : (currentActor.isP ? "敵チーム" : "味方チーム"));
+        currentActor = null; nextTurn();
+    }, 1200);
+}
+
+function executeEnemyTurn() {
+    let sName = "通常反論"; let isBoss = currentActorObj.type === "大論破王"; let eLP_ratio = enemyLP / maxEnemyLP; let pHas3x = pState.nextAtk3x; let pHasBuff = pStatus.some(s => s.type.includes("up")) || pHas3x; let eHasDebuff = eStatus.some(s => s.type.includes("down")) || eState.poison > 0; let eAnyDefActive = eState.defMult < 1.0 || eState.reflect;
+    let cos = currentActorObj.stats.cos; let un = currentActorObj.stats.un; let sL = SKILLS[currentActorObj.type] || [];
+    let costs = {
+        atk: isBoss ? 0 : 1, def: isBoss ? 0 : 1,
+        s1: isBoss ? 0 : (sL[0] ? getFluctuatedSP(2, 4, sL[0].baseCost, cos, un) : 0),
+        s2: isBoss ? 0 : (sL[1] ? getFluctuatedSP(2, 4, sL[1].baseCost, cos, un) : 0),
+        s3: isBoss ? 0 : (sL[2] ? getFluctuatedSP(2, 4, sL[2].baseCost, cos, un) : 0),
+        u: isBoss ? 0 : getFluctuatedSP(3, 5, (UNIQUE_SKILL_BASE[currentActorObj.uniqueSkill] || 4), cos, un)
+    };
+    let rem = actionQueue.filter(a => !a.isP).length;
+    let canUse = (cost) => { if (isBoss) return true; if (enemySP < cost) return false; if (enemySP - cost < rem) return false; return true; };
+
+    if (isBoss) {
+        let opts = [];
+        if (eLP_ratio < 0.4 || eHasDebuff) { opts.push("論理の再構築", "論理の再構築", "圧倒的論破", "論理の壁"); } 
+        else if (pHas3x) { opts.push("ちゃぶ台返し", "ちゃぶ台返し", "論理の壁", "論理の壁"); } 
+        else if (pHasBuff) { opts.push("ちゃぶ台返し", "圧倒的論破", "鋭いツッコミ"); } 
+        else { opts = ["通常反論", "圧倒的論破", "圧倒的論破", "鋭いツッコミ", "鋭いツッコミ", "ちゃぶ台返し"]; }
+        if (eAnyDefActive) { opts = opts.filter(o => !["論理の壁", "鉄壁の根回し", "カウンターロジック", "リスクヘッジ"].includes(o)); if (opts.length === 0) opts = ["通常反論"]; }
+        sName = opts[Math.floor(Math.random() * opts.length)];
+    } else {
+        let opts = [];
+        if(canUse(costs.atk)) opts.push("通常反論"); if(canUse(costs.def)) opts.push("リスクヘッジ");
+        if(sL.length > 0) { if(canUse(costs.s1)) opts.push(sL[0].name); if(canUse(costs.s2)) opts.push(sL[1].name); if(canUse(costs.s3)) opts.push(sL[2].name); }
+        let uS = currentActorObj.uniqueSkill; if(uS && canUse(costs.u)) opts.push(uS, uS);
+
+        if (currentActorObj.type === "お世話いぬ") {
+            if (eLP_ratio < 0.4) { if(canUse(costs.s2)) opts.push("メンタルケア", "メンタルケア"); if(canUse(costs.u)) opts.push("和やかな空気", "和やかな空気"); }
+            if (eHasDebuff) { if(canUse(costs.s1)) opts.push("アイスブレイク", "アイスブレイク"); if(canUse(costs.u)) opts.push("和やかな空気"); }
+            if (pHas3x) { if(canUse(costs.s3)) opts.push("鉄壁の根回し", "鉄壁の根回し"); }
+        }
+        if (currentActorObj.type === "リーダーライオン") { if (pHas3x) { if(canUse(costs.s1)) opts.push("カウンターロジック", "カウンターロジック", "カウンターロジック"); } }
+        if (currentActorObj.type === "わくわくうさぎ") { if (!pState.poison && canUse(costs.s2)) { opts.push("論点スリカエ", "論点スリカエ"); } }
+        if (eAnyDefActive) { opts = opts.filter(o => !["論理の壁", "鉄壁の根回し", "カウンターロジック", "リスクヘッジ"].includes(o)); }
+        if (opts.length === 0) opts = ["通常反論"];
+        sName = opts[Math.floor(Math.random() * opts.length)];
+    }
+
+    let consumedSP = 0;
+    if (!isBoss) {
+        if (sName === "通常反論" || sName === "リスクヘッジ") consumedSP = 1;
+        else if (sL[0] && sName === sL[0].name) consumedSP = costs.s1;
+        else if (sL[1] && sName === sL[1].name) consumedSP = costs.s2;
+        else if (sL[2] && sName === sL[2].name) consumedSP = costs.s3;
+        else if (sName === currentActorObj.uniqueSkill) consumedSP = costs.u;
+        enemySP = Math.max(0, enemySP - consumedSP);
+    }
+
+    if(["鋭いツッコミ", "アジェンダクラッシュ", "矛盾点の指摘"].includes(sName)) { selectedTarget = { type: 'char', side: 'p', index: Math.floor(Math.random() * playerParty.length) }; } 
+    else if (sName === "アイスブレイク") { selectedTarget = { type: 'team', side: 'e' }; } else { selectedTarget = null; }
+
+    logMsg(`◀ 敵の行動：『${sName}』`);
+    if(!isBoss && consumedSP > 0) { logMsg(`<span style="color:#888; font-size:0.8rem;">(敵陣営はSPを ${consumedSP} 消費した。残りSP: ${enemySP})</span>`); }
+    processSkill(sName, currentActorObj, false);
+    selectedTarget = null; updateTargetUI();
+    
+    setTimeout(()=>{
+        reduceStatusDuration(currentActor.name, false);
+        eState.dogActive = false; pState.dogActive = false; 
+        clearDefensiveStates(pState, "味方チーム");
+        currentActor = null; nextTurn();
+    }, 1200);
+}
+
+function processSkill(n, a, iP){
+    let tS = iP ? eState : pState; let mS = iP ? pState : eState;
+    let tSt = iP ? eStatus : pStatus; let mSt = iP ? pStatus : eStatus;
+    let tP = iP ? enemyParty : playerParty; let mP = iP ? playerParty : enemyParty;
+    let currentLon = getLon(a, iP); let bD = currentLon * 15 + Math.floor(Math.random() * 10); let isAtkSkill = false;
+    if(a.type === "大論破王") { bD = Math.floor(bD * 2.0); }
+    let atkSound = mS.nextAtk3x ? 'upgrade_attack' : 'attack';
+    const healSkills = ["和やかな空気", "論理の再構築", "全体サポート", "癒やしの空間", "リカバリープラン", "グローバル・ケア", "メンタル・リセット", "ピースメーカー", "バックアップ体制"];
+
+    let myName = isVersusMode ? (iP ? "1P" : "2P") : (iP ? "味方" : "敵");
+    let enName = isVersusMode ? (iP ? "2P" : "1P") : (iP ? "敵" : "味方");
+
+    if(n === "通常反論") { dealDmg(bD, iP, false, atkSound); isAtkSkill = true; }
+    else if(n === "リスクヘッジ") { playSE('guard'); mS.defMult = 0.5; logMsg(`${myName}の${a.name}は守りを固めた。`); }
+    else if(n === "カウンターロジック" || n === "論理の壁") { playSE('guard'); mS.reflect = true; logMsg(`${myName}の${a.name}は論理を無効化し跳ね返す構えをとった！`); }
+    else if(n === "リーダーの鼓舞") { playSE('buff'); mP.forEach(p => { applyStatus(mSt, p.name, "atk_up", 2); }); logMsg(`${myName}チーム全体の攻撃力が上がった！`); showFloatText(iP, "ATK UP", "buff-text"); }
+    else if(n === "クリティカル・ファクト") {
+        let prob = calcTeamProb(a, tP, 50);
+        if(Math.random() * 100 < prob) { dealDmg(Math.floor(bD * 2.0), iP, false, atkSound, true); logMsg(`強烈な一撃が直撃！相手の防御やカウンターを貫通した！`); } 
+        else { playSE('wrong'); logMsg(`${myName}の論理が外れた！(ミス)`); } isAtkSkill = true;
+    }
+    else if(n === "ブレインストーミング") { playSE('buff'); mP.forEach(p => { applyStatus(mSt, p.name, "spd_up", 2); }); logMsg(`${myName}チームのスピードが上がった！`); showFloatText(iP, "SPD UP", "buff-text"); updateTimelineOrder(); }
+    else if(n === "アジェンダクラッシュ") {
+        let t = tP[selectedTarget.index]; dealDmg(bD, iP, true, atkSound); isAtkSkill = true;
+        if(t.type === "リーダーライオン") { logMsg(`${enName}の${t.name}には妨害が効かない！(ダメージのみ)`); } 
+        else {
+            let prob = calcDebuffProb(a, t, 60);
+            if(Math.random() * 100 < prob) { setTimeout(() => playSE('debuff'), 500); t.stun = 2; logMsg(`さらに ${t.name} の行動をスキップさせた！(2ターン)`); } 
+            else { setTimeout(() => playSE('wrong'), 500); logMsg(`しかし妨害は防がれてしまった…`); }
+        }
+    }
+    else if(n === "論点スリカエ") {
+        let rRnd = Math.floor(Math.random() * 2) + 2; let prob = calcTeamProb(a, tP, 50); 
+        if(Math.random() * 100 < prob) {
+            setTimeout(() => playSE('debuff'), 100); let pCount = Math.floor(rRnd * (iP ? enemyParty.length : playerParty.length));
+            if(iP){ eState.poison = Math.max(eState.poison, pCount); logMsg(`相手チーム全体を迷走(毒)状態にした！(${pCount}回行動継続)`); } 
+            else { pState.poison = Math.max(pState.poison, pCount); logMsg(`味方チーム全体が迷走(毒)状態にされてしまった！(${pCount}回行動継続)`); }
+        } else { setTimeout(() => playSE('wrong'), 100); logMsg(`防がれてしまった…`); }
+    }
+    else if(n === "メンタルケア") {
+        playSE('buff'); let h = Math.floor(a.stats.hat * 30);
+        if (currentThemeObj && currentThemeObj.effectId === "cancel" && a.type === "お世話いぬ") { h = Math.floor(h * 1.5); }
+        if(iP){ playerLP = Math.min(maxPlayerLP, playerLP + h); } else { enemyLP = Math.min(maxEnemyLP, enemyLP + h); }
+        logMsg(`${myName}チームのLPが ${h} 回復した！`); showFloatText(iP, `+${h}`, "dmg-heal"); updateLPUI();
+    }
+    else if(n === "アイスブレイク") {
+        setTimeout(() => playSE('debuff_restore'), 100);
+        if(selectedTarget.type === 'team'){
+            if(iP){ pStatus = pStatus.filter(s => !["spd_down","atk_down","men_down"].includes(s.type)); playerParty.forEach(p => p.stun = 0); pState.poison = 0; } 
+            else { eStatus = eStatus.filter(s => !["spd_down","atk_down","men_down"].includes(s.type)); enemyParty.forEach(p => p.stun = 0); eState.poison = 0; }
+            logMsg(`${myName}チーム全体のデバフ・毒・行動不能をすべて解除した！`);
+        } else {
+            let tN = mP[selectedTarget.index].name;
+            if(iP){ pStatus = pStatus.filter(s => !(s.target === tN && ["spd_down","atk_down","men_down"].includes(s.type))); playerParty[selectedTarget.index].stun = 0; } 
+            else { eStatus = eStatus.filter(s => !(s.target === tN && ["spd_down","atk_down","men_down"].includes(s.type))); enemyParty[selectedTarget.index].stun = 0; }
+            logMsg(`${tN}のデバフ・行動不能をすべて解除した！`);
+        }
+        updateTimelineOrder();
+    }
+    else if(n === "鉄壁の根回し") { playSE('guard'); mS.defMult = 0.2; mS.daibogyoCount = 2; logMsg(`${myName}陣営は鉄壁の大防御態勢に入った！(相手の行動2回分)`); }
+    else if(n === "マシンガン・データ") {
+        let hits = 3 + Math.floor(Math.random() * 5); let delay = 0; let tot = 0; let tRef = 0; let logTxt = `${hits}連続のデータ攻撃！<br>`;
+        if(mS.nextAtk3x) { bD *= 3; showFloatText(iP, "3倍威力発動！", "buff-text"); }
+        for(let i = 0; i < hits; i++) {
+            let dmgBase = Math.floor(bD * 0.4); let dV = 0;
+            tP.forEach(p => { let m = getMen(p); if(tSt.some(s => s.target === p.name && s.type === "men_down")) m = Math.floor(m / 2); dV += Math.floor(m * 2); });
+            if(tS.reflect) {
+                setTimeout(() => { playSE('counter'); }, delay); let originalDmg = Math.max(1, Math.floor(dmgBase) - Math.floor(dV)); let ref = Math.floor(originalDmg * 2);
+                logTxt += `&nbsp;&nbsp;${i+1}発目: カウンターで${ref}反射！<br>`; tRef += ref;
+            } else {
+                if (tS.defMult < 1.0) { setTimeout(() => { playSE('guard_damage'); }, delay); } else { setTimeout(() => { playSE(atkSound); }, delay); }
+                let dmg = Math.max(1, Math.floor(dmgBase * tS.defMult) - Math.floor(dV)); logTxt += `&nbsp;&nbsp;${i+1}発目: ${dmg}ダメージ！<br>`; tot += dmg;
+            } delay += 150;
+        } logMsg(logTxt);
+        if(tS.reflect) { logMsg(`💥 連続攻撃をすべて跳ね返し、${myName}陣営に合計 <span style="color:#c92a2a">${tRef}</span> のダメージを与えた！`); setTimeout(() => { applyDamage(tRef, !iP, "reflect"); }, delay); } 
+        else { logMsg(`💥 ${enName}チームに合計 <span style="color:#c92a2a">${tot}</span> のダメージ！`); setTimeout(() => { applyDamage(tot, iP, "attack"); }, delay); } isAtkSkill = true;
+    }
+    else if(n === "矛盾点の指摘" || n === "鋭いツッコミ") {
+        let t = tP[selectedTarget.index];
+        if(t.type === "リーダーライオン") { playSE('wrong'); logMsg(`${t.name}にはデバフが効かない！`); } 
+        else {
+            let prob = (n === "矛盾点の指摘") ? 100 : calcDebuffProb(a, t, 70);
+            if(Math.random() * 100 < prob) {
+                playSE('debuff'); applyStatus(tSt, t.name, "atk_down", 2); applyStatus(tSt, t.name, "men_down", 2); if(n === "鋭いツッコミ") applyStatus(tSt, t.name, "spd_down", 2); 
+                logMsg(`${t.name}のステータスを大幅に下げた！`);
+            } else { playSE('wrong'); logMsg(`${t.name}はデバフに抵抗した！`); }
+        }
+    }
+    else if(n === "キラーパス") { playSE('buff'); mS.nextAtk3x = true; logMsg(`${myName}チームの次の攻撃威力が3倍になった！`); }
+    else if(n === "ちゃぶ台返し") { playSE('debuff'); pStatus = pStatus.filter(s => !["atk_up", "spd_up"].includes(s.type)); pState.nextAtk3x = false; logMsg(`プレイヤーのバフがすべて消し飛ばされた！！`); updateTimelineOrder(); }
+    else if(healSkills.includes(n)) {
+        setTimeout(() => playSE('debuff_restore'), 100); let h = Math.floor(a.stats.hat * 25);
+        if (currentThemeObj && currentThemeObj.effectId === "cancel" && a.type === "お世話いぬ") { h = Math.floor(h * 1.5); }
+        if(iP){ playerLP = Math.min(maxPlayerLP, playerLP + h); pStatus = pStatus.filter(s => !["spd_down", "atk_down", "men_down"].includes(s.type)); playerParty.forEach(p => p.stun = 0); pState.poison = 0; } 
+        else { enemyLP = Math.min(maxEnemyLP, enemyLP + h); eStatus = eStatus.filter(s => !["spd_down", "atk_down", "men_down"].includes(s.type)); enemyParty.forEach(p => p.stun = 0); eState.poison = 0; }
+        logMsg(`${myName}チームのLPが ${h} 回復し、デバフ・迷走(毒)・行動不能が解除された！`); showFloatText(iP, `+${h}`, "dmg-heal"); updateLPUI(); updateTimelineOrder();
+    }
+    else if(n === "圧倒的論破") { dealDmg(Math.floor(bD * 2.0), iP, false, atkSound); logMsg(`強烈な論破が直撃！`); isAtkSkill = true; }
+    else { dealDmg(Math.floor(bD * 2.5), iP, false, atkSound); logMsg(`固有スキル炸裂！！`); isAtkSkill = true; }
+    
+    if(isAtkSkill && n !== "マシンガン・データ") { mS.nextAtk3x = false; }
+    updateStatusUI();
+}
+
+function dealDmg(a, iP, skipReflect = false, atkSound = 'attack', ignoreDef = false) {
+    let tS = iP ? eState : pState; let tP = iP ? enemyParty : playerParty; let tSt = iP ? eStatus : pStatus; let mS = iP ? pState : eState;
+    if(mS.nextAtk3x) { a = Math.floor(a * 3); showFloatText(iP, "3倍威力発動！", "buff-text"); }
+    
+    let dV = 0; tP.forEach(p => { let m = getMen(p); if(tSt.some(s => s.target === p.name && s.type === "men_down")) m = Math.floor(m / 2); dV += Math.floor(m * 2); });
+    let myName = isVersusMode ? (iP ? "1P" : "2P") : (iP ? "味方" : "敵");
+    let enName = isVersusMode ? (iP ? "2P" : "1P") : (iP ? "敵" : "味方");
+
+    if(tS.reflect && !skipReflect && !ignoreDef) {
+        let originalDmg = Math.max(1, Math.floor(a) - Math.floor(dV)); let reflectDmg = Math.floor(originalDmg * 2); setTimeout(() => playSE('counter'), 150);
+        logMsg(`💡 ${enName}のカウンター発動！攻撃を無効化し、${myName}陣営に <span style="color:#c92a2a">${reflectDmg}</span> のダメージを跳ね返した！`);
+        updateStatusUI(); applyDamage(reflectDmg, !iP, "reflect"); return;
+    }
+    
+    if (tS.defMult < 1.0 && !ignoreDef) { setTimeout(() => playSE('guard_damage'), 150); } else { setTimeout(() => playSE(atkSound), 150); }
+    let defMulti = ignoreDef ? 1.0 : tS.defMult; let dmg = Math.max(1, Math.floor(a * defMulti) - Math.floor(dV));
+    logMsg(`💥 ${enName}チームに <span style="color:#c92a2a">${dmg}</span> のダメージ！`);
+    applyDamage(dmg, iP, "attack");
+}
+
+function applyDamage(d, iT, ty) {
+    let targetName = isVersusMode ? (iT ? "2P" : "1P") : (iT ? "敵" : "味方");
+    let tState = iT ? eState : pState;
+    
+    if(iT){
+        if(enemyLP - d <= 0 && tState.dogEndure){ enemyLP = 1; tState.dogActive = true; tState.dogEndure = false; playSE('kuishibari'); logMsg(`${targetName}のいぬがLP1で耐えた！`); } 
+        else if(enemyLP - d <= 0 && tState.dogActive && ty === "attack") { enemyLP = 1; } 
+        else { enemyLP -= d; } showFloatText(false, `-${d}`, "dmg-enemy");
+    } else {
+        if(playerLP - d <= 0 && tState.dogEndure){ playerLP = 1; tState.dogActive = true; tState.dogEndure = false; playSE('kuishibari'); logMsg(`${targetName}のいぬがLP1で耐えた！`); } 
+        else if(playerLP - d <= 0 && tState.dogActive && ty === "attack") { playerLP = 1; } 
+        else { playerLP -= d; } showFloatText(true, `-${d}`, "dmg-player");
+    }
+    updateLPUI(); updateStatusUI();
+}
+
+function updateLPUI() {
+    playerLP = Math.max(0, playerLP); enemyLP = Math.max(0, enemyLP);
+    document.getElementById("player-lp-txt").innerText = `${playerLP}/${maxPlayerLP}`;
+    document.getElementById("player-lp-bar").style.width = `${(playerLP / maxPlayerLP) * 100}%`;
+    document.getElementById("enemy-lp-txt").innerText = `${enemyLP}/${maxEnemyLP}`;
+    document.getElementById("enemy-lp-bar").style.width = `${(enemyLP / maxEnemyLP) * 100}%`;
+}
+
+function updateSPUI() {
+    if(isVersusMode && currentActor) {
+        document.getElementById("team-sp").innerText = currentActor.isP ? teamSP : enemySP;
+    } else {
+        document.getElementById("team-sp").innerText = teamSP;
+    }
+    document.getElementById("max-sp").innerText = maxSP;
+}
+
+function updateStatusUI() {
+    let pb = document.getElementById("p-team-status"), ph = "", phv = [];
+    if(pState.reflect) { ph += `<span class="s-badge s-counter">カウンター</span>`; phv.push("カウンター (無効＆2倍反射 / 次の相手行動終了まで)"); }
+    else if(pState.defMult === 0.2) { ph += `<span class="s-badge s-def">大防御</span>`; phv.push(`大防御 (ダメージ激減 / 残り${pState.daibogyoCount}回行動分)`); }
+    else if(pState.defMult === 0.5) { ph += `<span class="s-badge s-def">防御</span>`; phv.push(`防御 (ダメージ半減 / 次の相手行動終了まで)`); }
+    if(pState.nextAtk3x) { ph += `<span class="s-badge s-buff">次撃3倍</span>`; phv.push("次撃3倍 (次の攻撃ダメージ3倍)"); }
+    if(pState.dogEndure) { ph += `<span class="s-badge s-endure">食いしばり</span>`; phv.push("食いしばり (致命傷をLP1で耐える)"); }
+    if(pState.poison > 0) { ph += `<span class="s-badge s-poison-team">毒</span>`; phv.push(`迷走[毒] (残り${pState.poison}回行動継続)`); }
+    pb.innerHTML = ph; document.getElementById("p-team-hover").innerText = phv.length > 0 ? phv.join("\n") : "チーム状態変化: なし";
+    
+    let eb = document.getElementById("e-team-status"), eh = "", ehv = [];
+    if(eState.reflect) { eh += `<span class="s-badge s-counter">カウンター</span>`; ehv.push("カウンター (無効＆2倍反射 / 次の相手行動終了まで)"); }
+    else if(eState.defMult === 0.2) { eh += `<span class="s-badge s-def">大防御</span>`; ehv.push(`大防御 (ダメージ激減 / 残り${eState.daibogyoCount}回行動分)`); }
+    else if(eState.defMult === 0.5) { eh += `<span class="s-badge s-def">防御</span>`; ehv.push(`防御 (ダメージ半減 / 次の相手行動終了まで)`); }
+    if(eState.nextAtk3x) { eh += `<span class="s-badge s-buff">次撃3倍</span>`; ehv.push("次撃3倍 (次の攻撃ダメージ3倍)"); }
+    if(eState.dogEndure) { eh += `<span class="s-badge s-endure">食いしばり</span>`; ehv.push("食いしばり (致命傷をLP1で耐える)"); }
+    if(eState.poison > 0) { eh += `<span class="s-badge s-poison-team">毒</span>`; ehv.push(`迷走[毒] (残り${eState.poison}回行動継続)`); }
+    eb.innerHTML = eh; document.getElementById("e-team-hover").innerText = ehv.length > 0 ? ehv.join("\n") : "チーム状態変化: なし";
+    
+    playerParty.forEach((p, i) => { let b = document.getElementById(`p-char-status-${i}`); if(b) b.innerHTML = getCharStatusHtml(p.name, true, p.stun); let h = document.getElementById(`p-char-hover-${i}`); if(h) h.innerText = getCharHoverText(p.name, p.furigana, true, p.stun, p.type); });
+    enemyParty.forEach((e, i) => { let b = document.getElementById(`e-char-status-${i}`); if(b) b.innerHTML = getCharStatusHtml(e.name, false, e.stun); let h = document.getElementById(`e-char-hover-${i}`); if(h) h.innerText = getCharHoverText(e.name, e.furigana, false, e.stun, e.type); });
+}
+
+function getCharStatusHtml(n, iP, st) {
+    let ar = iP ? pStatus : eStatus; let h = ""; if(st > 0) h += `<span class="s-icon stun">休</span>`;
+    ar.filter(s => s.target === n).forEach(s => { if(s.type === "atk_up") h += `<span class="s-icon buff">攻↑</span>`; if(s.type === "atk_down") h += `<span class="s-icon debuff">攻↓</span>`; if(s.type === "spd_up") h += `<span class="s-icon buff">速↑</span>`; if(s.type === "spd_down") h += `<span class="s-icon debuff">速↓</span>`; if(s.type === "men_down") h += `<span class="s-icon debuff">メ↓</span>`; });
+    return h;
+}
+
+function getCharHoverText(n, f, iP, st, type) {
+    let ar = iP ? pStatus : eStatus; let h = []; h.push(`【${n} (${f})】`); h.push(`タイプ: ${type}`); if(st > 0) h.push(`スタン (残り${st}行動)`);
+    ar.filter(s => s.target === n).forEach(s => { let tn = ""; if(s.type === "atk_up") tn = "攻撃力UP"; if(s.type === "atk_down") tn = "攻撃力DOWN"; if(s.type === "spd_up") tn = "スピードUP"; if(s.type === "spd_down") tn = "スピードDOWN"; if(s.type === "men_down") tn = "メンタルDOWN"; h.push(`${tn} (残り${s.duration}R)`); });
+    return h.join("\n");
+}
+
+function renderPartyLists() {
+    let pc = document.getElementById("player-party-col"); pc.innerHTML = "";
+    playerParty.forEach((p, i) => { pc.innerHTML += `<div class="char-sprite" id="p-char-${i}" onclick="selectTarget('char','p',${i})"><img src="${p.img}"><div class="char-status-icons" id="p-char-status-${i}"></div><div class="status-hover-tooltip" id="p-char-hover-${i}">状態: なし</div></div>`; });
+    let ec = document.getElementById("enemy-party-col"); ec.innerHTML = "";
+    enemyParty.forEach((e, i) => { ec.innerHTML += `<div class="char-sprite" id="e-char-${i}" onclick="selectTarget('char','e',${i})"><img src="${e.img}"><div class="char-status-icons" id="e-char-status-${i}"></div><div class="status-hover-tooltip" id="e-char-hover-${i}">状態: なし</div></div>`; });
+    updateStatusUI(); updateTargetUI();
+}
+
+function logMsg(m) { let b = document.getElementById("battle-log"); b.innerHTML += `<div>${m}</div>`; b.scrollTop = b.scrollHeight; }
+
+function showFloatText(iP, t, c) {
+    let col = document.getElementById(iP ? "player-party-col" : "enemy-party-col"); let el = document.createElement("div"); el.className = `dmg-text ${c}`; el.innerText = t; el.style.top = "30%"; el.style.left = "40%";
+    col.appendChild(el); setTimeout(() => { if(col.contains(el)) col.removeChild(el); }, 1000);
+}
+
+// 🌟 敗北を認めるボタンやその他の遷移時にBGMを停止
+window.goToLoseScenario = function() { bgm.pause(); playSE('select'); setupScenario(false, true); };
+
+function checkWinLoss() {
+    if(isGameOver) return; 
+    
+    if(playerLP <= 0) {
+        isGameOver = true;
+        if(isVersusMode) {
+            logMsg(`<br><span style="color:#ff6b81; font-size:1.2rem; font-weight:900;">◆ 2Pチームの勝ち！ ◆</span>`);
+            playSE('clear'); document.getElementById("vs-end-btn").style.display = "block";
+        } else {
+            logMsg(`<br><span style="color:#c92a2a; font-size:1.2rem; font-weight:900;">◆ 敗北しました… ◆</span>`);
+            playSE('result_bad'); document.getElementById('lose-next-btn').style.display = 'block'; 
+        }
+    } else if(enemyLP <= 0) {
+        isGameOver = true;
+        if(isVersusMode) {
+            logMsg(`<br><span style="color:#4aa8ff; font-size:1.2rem; font-weight:900;">◆ 1Pチームの勝ち！ ◆</span>`);
+            playSE('clear'); document.getElementById("vs-end-btn").style.display = "block";
+        } else {
+            logMsg(`<br><span style="color:#2b8a3e; font-size:1.2rem; font-weight:900;">◆ 勝利しました！！ ◆</span>`);
+            playSE('clear');
+            if(currentStage === 5) { setTimeout(() => { bgm.pause(); currentStage++; setupScenario(false, false); }, 2000); } 
+            else { setTimeout(() => { currentStage++; pendingAddedData = setupStageData(); document.getElementById("next-debate-btn").style.display = "block"; }, 1000); }
+        }
+    }
+}
+
+window.goToNextDebate = function() { bgm.pause(); playSE('start'); setupScenario(true, false, pendingAddedData); };
+
+window.endVersusGame = function() {
+    bgm.pause();
+    playSE('back_start');
+    isGameOver = true;
+    backToStart();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>貸借対照表バランサー！</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* 🌟 スクローバー領域を常に確保して画面ズレを防止 
+           ＆ 全モードでゆとりのあるレイアウトにするため flex-start と padding-top を設定 */
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            background: linear-gradient(180deg, #f5fbff 0%, #eef6ff 35%, #f7faff 100%); 
+            color: #333; text-align: center; 
+            padding: 8vh 5px 380px 5px; /* padding-bottomを380pxに設定し重なり防止 */
+            overflow-x: hidden; overflow-y: scroll; min-height: 100vh; 
+            display: flex; flex-direction: column; justify-content: flex-start;
+        }
+
+        .top-return-btn { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9); color: #4aa8ff; padding: 10px 20px; border-radius: 99px; font-weight: 800; border: none; cursor: pointer; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(74,168,255,0.15); z-index: 100; transition: 0.2s; }
+        .top-return-btn:hover { background: #4aa8ff; color: #fff; transform: scale(1.05); }
+
+        h1.game-title { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; background: linear-gradient(135deg, #4aa8ff 0%, #9c36b5 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 8px 25px rgba(74, 168, 255, 0.25); margin-bottom: 25px; letter-spacing: 2px; position: relative; z-index: 5; }
+        
+        #game-screen, #result-screen { display: none; }
+        .blur-circle { position: fixed; border-radius: 50%; filter: blur(90px); z-index: -2; opacity: 0.45; }
+        .blue-main { width: 280px; height: 280px; background: #7cc7ff; top: -60px; left: -40px; }
+        .blue-sub { width: 340px; height: 340px; background: #b0d8ff; bottom: -80px; right: -80px; }
+
+        .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 10px 30px rgba(50, 120, 200, 0.06); position: relative; z-index: 5; }
+        .mode-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;}
+        .tab-btn { padding: 10px 20px; border-radius: 999px; border: 2px solid #4aa8ff; background: rgba(255,255,255,0.8); color: #4aa8ff; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(74,168,255,0.1); }
+        .tab-btn.active { background: linear-gradient(135deg, #74c2ff, #4aa8ff); color: white; box-shadow: 0 6px 15px rgba(74,168,255,0.25); border-color: transparent; }
+        .tab-btn:hover:not(.active) { background: #eef6ff; }
+
+        #game-board { display: flex; justify-content: space-between; max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 24px; padding: 15px; position: relative; height: 360px; box-shadow: 0 10px 30px rgba(50, 120, 200, 0.06); }
+        .side { width: 46%; border: 2px dashed #b0d8ff; border-radius: 16px; padding: 8px; display: flex; flex-direction: column-reverse; position: relative; background: rgba(255,255,255,0.3); overflow: hidden; }
+        .side h3 { margin: 0 0 10px 0; color: #555; font-size: 1rem; font-weight: 800; text-align: center; z-index: 2; position: absolute; top: 10px; left: 0; width: 100%; }
+        
+        .block { background: linear-gradient(135deg, #74c2ff, #4aa8ff); color: white; padding: 10px; margin-top: 4px; border-radius: 12px; font-weight: 700; font-size: 14px; text-align: center; z-index: 2; box-shadow: 0 4px 10px rgba(74,168,255,0.2); border: 1px solid rgba(255,255,255,0.2); }
+        .right-side .block { background: linear-gradient(135deg, #ff9aa7, #ff6b81); box-shadow: 0 4px 10px rgba(255,107,129,0.2); }
+        
+        #current-block { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ffe066, #fcc419); color: #333; padding: 12px 24px; border-radius: 16px; font-size: 20px; font-weight: 800; box-shadow: 0 8px 20px rgba(250,176,5,0.25); border: 1px solid rgba(255,255,255,0.4); transition: top 0.2s; z-index: 5; }
+        
+        #versus-board { display: none; justify-content: center; align-items: stretch; max-width: 950px; margin: 0 auto; height: 420px; gap: 20px; }
+        .vs-side-panel { flex: 1; border-radius: 24px; position: relative; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.08); background: rgba(255,255,255,0.7); backdrop-filter: blur(5px);}
+        .vs-side-panel.p1 { border: 3px solid #4aa8ff; }
+        .vs-side-panel.p2 { border: 3px solid #ff6b81; }
+
+        .vs-center-pillars { width: 160px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; background: rgba(255,255,255,0.6); border-radius: 40px; padding: 20px 15px; border: 2px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative;}
+        .vs-pillar-label { font-weight: 900; color: #555; font-size: 1.1rem; text-shadow: 0 2px 4px #fff; width: 100%; text-align: center; margin-bottom: 10px; z-index: 2;}
+        .vs-pillars-container { display: flex; gap: 15px; height: 100%; width: 100%; justify-content: center; align-items: flex-end; }
+        .vs-pillar-wrap { display: flex; flex-direction: column; align-items: center; height: 100%; width: 100%; justify-content: flex-end; gap: 5px;}
+        .vs-pillar { width: 40px; height: 100%; background: rgba(0,0,0,0.08); border-radius: 20px; overflow: hidden; position: relative; box-shadow: inset 0 6px 12px rgba(0,0,0,0.1); border: 2px solid #fff;}
+        .vs-pillar-name { font-size: 0.85rem; font-weight: 900; color: #777;}
+        
+        .vs-gauge-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .p1 .vs-gauge-fill { background: linear-gradient(to top, #4aa8ff, #74c2ff); }
+        .p2 .vs-gauge-fill { background: linear-gradient(to top, #ff6b81, #ff9aa7); }
+        
+        .vs-score-disp { font-size: 2.3rem; font-weight: 900; letter-spacing: 1px; margin: 10px 0; text-align: center; }
+        .vs-side-panel.p1 .vs-score-disp { background: linear-gradient(135deg, #4aa8ff, #74c2ff); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 10px rgba(74, 168, 255, 0.3); }
+        .vs-side-panel.p2 .vs-score-disp { background: linear-gradient(135deg, #ff6b81, #ff9aa7); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 10px rgba(255, 107, 129, 0.3); }
+        
+        .vs-content { display: flex; flex-direction: column; align-items: center; height: 100%; width: 100%;}
+        
+        .vs-combo-disp { font-size: 0.95rem; font-weight: 800; margin-bottom: auto; }
+        .p1 .vs-combo-disp { color: #4aa8ff; }
+        .p2 .vs-combo-disp { color: #ff6b81; }
+        
+        .vs-block-wrap { background: linear-gradient(135deg, #ffe066, #fcc419); border-radius: 16px; padding: 20px 10px; width: 90%; box-shadow: 0 8px 20px rgba(250,176,5,0.25); border: 2px solid #fff; }
+        
+        #stage-progress-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-top: 40px; }
+        .stage-target-label { font-size: 1.2rem; font-weight: 800; color: #555; margin-bottom: 5px; }
+        .stage-target-score { font-size: 3rem; font-weight: 900; color: #ff6b81; margin-bottom: 20px; text-shadow: 0 2px 5px rgba(255,107,129,0.2); }
+        .stage-bar-bg { width: 85%; height: 24px; background: rgba(74,168,255,0.1); border-radius: 12px; overflow: hidden; border: 1px solid rgba(74,168,255,0.3); }
+        #stage-progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #74c2ff, #4aa8ff); transition: width 0.2s ease-out; }
+
+        #ui { max-width: 800px; margin: 10px auto; display: flex; justify-content: space-between; align-items: flex-start; position: relative; height: auto; min-height: 60px; margin-bottom: 10px; }
+        #timer-container { position: relative; width: 32%; text-align: center; background: rgba(255, 107, 129, 0.08); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255, 107, 129, 0.15); font-size: 0.9rem; font-weight: 700; color: #555; }
+        #timer { color: #ff6b81; font-size: 1.3rem; font-weight: 800; text-shadow: 0 1px 2px rgba(255,107,129,0.1); }
+        #period-container { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .alert { color: #ff6b81; font-size: 20px; display: none; font-weight: 800; text-shadow: 0 0 10px rgba(255,107,129,0.2); position: absolute; top: 32px; white-space: nowrap; }
+        
+        #score-container { position: relative; width: 35%; text-align: center; background: rgba(74, 168, 255, 0.08); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(74, 168, 255, 0.15); font-size: 0.9rem; font-weight: 700; color: #555; }
+        #score { color: #4aa8ff; font-size: 1.3rem; font-weight: 800; display: block; margin-bottom: 2px; transition: color 0.2s; }
+        
+        .combo-info { font-size: 12px; color: #555; margin-top: 2px; font-weight: 800; display: inline-block; white-space: nowrap; background: rgba(74, 168, 255, 0.1); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(74, 168, 255, 0.3); }
+        #combo { font-size: 15px; color: #ff6b81; }
+        #multiplier { font-size: 15px; color: #4aa8ff; }
+
+        .side-indicator { display: flex; justify-content: space-between; max-width: 800px; margin: 0 auto 10px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-weight: 800; font-size: 0.95rem; }
+        .indicator-left { background: linear-gradient(135deg, rgba(116, 194, 255, 0.15), rgba(74, 168, 255, 0.25)); color: #2d8be6; width: 50%; padding: 8px; text-align: center; border-right: 2px solid #fff; }
+        .indicator-right { background: linear-gradient(135deg, rgba(255, 154, 167, 0.15), rgba(255, 107, 129, 0.25)); color: #e64960; width: 50%; padding: 8px; text-align: center; }
+
+        .floating-score { position: absolute; color: #fab005; font-size: 22px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1); pointer-events: none; animation: floatUpOut 1s forwards; z-index: 10; }
+        @keyframes floatUpOut { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        .floating-total { position: absolute; font-size: 18px; font-weight: 800; pointer-events: none; animation: floatUpTotal 1s forwards; z-index: 10; top: -10px; left: 40px; white-space: nowrap; }
+        .total-plus { color: #2b8a3e; }
+        .total-minus { color: #c92a2a; }
+        .total-bonus { position: absolute; color: #9c36b5; font-size: 24px; font-weight: 800; pointer-events: none; animation: floatUpBonus 1.5s forwards; z-index: 20; left: -50px; top: -30px; text-shadow: 0 0 10px rgba(156,54,181,0.2); white-space: nowrap; }
+        .floating-combo { position: absolute; color: #0b7285; font-size: 18px; font-weight: 800; pointer-events: none; animation: floatUpCombo 1s forwards; z-index: 15; top: -20px; right: -40px; white-space: nowrap;}
+        .combo-reset { position: absolute; color: #c92a2a; font-size: 20px; font-weight: 800; pointer-events: none; animation: floatDownReset 1s forwards; z-index: 15; top: 10px; right: -50px; white-space: nowrap;}
+        .floating-time { position: absolute; font-size: 18px; font-weight: 800; pointer-events: none; animation: floatUpTime 1s forwards; z-index: 15; top: -10px; right: -30px; white-space: nowrap; }
+        .time-plus { color: #2b8a3e; }
+        .time-minus { color: #c92a2a; }
+
+        .vs-float-text { position: absolute; font-size: 24px; font-weight: 900; pointer-events: none; animation: vsFloatUp 0.8s ease-out forwards; z-index: 20; }
+        .vs-plus { color: #2b8a3e; text-shadow: 0 0 5px rgba(255,255,255,0.8); }
+        .vs-minus { color: #c92a2a; text-shadow: 0 0 5px rgba(255,255,255,0.8); }
+        @keyframes vsFloatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
+
+        @keyframes floatUpTotal { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px); } }
+        @keyframes floatUpBonus { 0% { opacity: 1; transform: translateY(0) scale(1); } 50% { transform: translateY(-30px) scale(1.1); } 100% { opacity: 0; transform: translateY(-60px) scale(1); } }
+        @keyframes floatUpCombo { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px); } }
+        @keyframes floatDownReset { 0% { opacity: 1; transform: translateY(0) scale(1.1); } 100% { opacity: 0; transform: translateY(20px) scale(1); } }
+        @keyframes floatUpTime { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+        
+        @keyframes bossAura {
+            0% { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; color: #fff; }
+            50% { text-shadow: 0 0 10px #ff4d4d, 0 0 20px #ff0000, 0 0 30px #8a0000; color: #ffe6e6; }
+            100% { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; color: #fff; }
+        }
+        .ozawa-aura {
+            animation: bossAura 1.5s infinite alternate;
+            font-weight: 900 !important;
+            background: #4a0000;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            letter-spacing: 2px;
+        }
+
+        @keyframes goldAura {
+            0% { text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700; color: #fff; }
+            50% { text-shadow: 0 0 10px #ffea00, 0 0 20px #ffd700, 0 0 30px #b8860b; color: #fffacd; }
+            100% { text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700; color: #fff; }
+        }
+        .gold-aura { animation: goldAura 1.5s infinite alternate; font-weight: 900 !important; background: #554400; padding: 2px 8px; border-radius: 6px; display: inline-block; letter-spacing: 2px; }
+
+        @keyframes silverAura {
+            0% { text-shadow: 0 0 5px #c0c0c0, 0 0 10px #c0c0c0; color: #fff; }
+            50% { text-shadow: 0 0 10px #e0e0e0, 0 0 20px #c0c0c0, 0 0 30px #808080; color: #f8f8f8; }
+            100% { text-shadow: 0 0 5px #c0c0c0, 0 0 10px #c0c0c0; color: #fff; }
+        }
+        .silver-aura { animation: silverAura 1.5s infinite alternate; font-weight: 900 !important; background: #333333; padding: 2px 8px; border-radius: 6px; display: inline-block; letter-spacing: 2px; }
+
+        @keyframes bronzeAura {
+            0% { text-shadow: 0 0 5px #cd7f32, 0 0 10px #cd7f32; color: #fff; }
+            50% { text-shadow: 0 0 10px #e6994c, 0 0 20px #cd7f32, 0 0 30px #8b4513; color: #ffe4c4; }
+            100% { text-shadow: 0 0 5px #cd7f32, 0 0 10px #cd7f32; color: #fff; }
+        }
+        .bronze-aura { animation: bronzeAura 1.5s infinite alternate; font-weight: 900 !important; background: #4a2511; padding: 2px 8px; border-radius: 6px; display: inline-block; letter-spacing: 2px; }
+
+        @keyframes greenGoldAura {
+            0% { text-shadow: 0 0 5px #2b8a3e, 0 0 10px #ffd700; color: #fff; }
+            50% { text-shadow: 0 0 10px #38d9a9, 0 0 20px #ffea00, 0 0 30px #2b8a3e; color: #e6fcf5; }
+            100% { text-shadow: 0 0 5px #2b8a3e, 0 0 10px #ffd700; color: #fff; }
+        }
+        .green-gold-aura { animation: greenGoldAura 1.5s infinite alternate; font-weight: 900 !important; background: #0b2b13; padding: 2px 8px; border-radius: 6px; display: inline-block; letter-spacing: 2px; }
+
+        .floating { animation: float 3s ease-in-out infinite; }
+
+        .play-btn { padding: 12px 20px; font-size: 1rem; margin: 5px; cursor: pointer; border-radius: 16px; border: none; font-weight: 800; width: 48%; transition: 0.25s; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        .btn-left { background: linear-gradient(135deg, #74c2ff, #4aa8ff); color: white; box-shadow: 0 6px 18px rgba(74,168,255,0.25); }
+        .btn-right { background: linear-gradient(135deg, #ff9aa7, #ff6b81); color: white; box-shadow: 0 6px 18px rgba(255,107,129,0.25); }
+        .play-btn:hover { transform: translateY(-3px); }
+        
+        .setting-select { font-size: 16px; padding: 10px 14px; border-radius: 12px; border: 2px solid #4aa8ff; font-weight: 800; cursor: pointer; color: #333; outline: none; background: #fff; box-shadow: 0 4px 10px rgba(74,168,255,0.1); width: 220px; text-align: center; font-family: inherit; transition: 0.2s;}
+        .setting-select:hover { transform: scale(1.02); }
+
+        .board-wrap { margin-top: 25px; padding: 20px; min-width: 380px; text-align: left; display: inline-block; }
+        .board-wrap h3 { margin-top: 0; color: #4aa8ff; text-align: center; font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
+        .ranking-mode-title { text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 10px; font-weight: 700; }
+        .ranking-list { font-size: 15px; line-height: 1.8; padding-left: 35px; margin-left: 5px; color: #555; max-height: 200px; overflow-y: auto; margin-top: 0; padding-right: 10px;}
+        .ranking-list::-webkit-scrollbar { width: 6px; }
+        .ranking-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        .btn-reset { padding: 6px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; cursor: pointer; display: block; margin: 15px auto 0 auto; font-weight: 700; transition: 0.2s; }
+        .btn-reset:hover { background: rgba(239, 68, 68, 0.2); }
+
+        .menu-container { max-width: 650px; margin: 5px auto; padding: 25px 20px 15px 20px; position: relative; z-index: 5;}
+        
+        .game-desc { color: #444; line-height: 1.8; font-weight: 700; font-size: 1.05rem; margin-bottom: 25px; text-align: left; padding: 0 15px; }
+        .game-desc span { color: #ff6b81; font-weight: 800; }
+
+        .start-btn { padding: 14px 40px; font-size: 1.1rem; cursor: pointer; background: linear-gradient(135deg, #74c2ff, #4aa8ff); color: #fff; border: none; border-radius: 18px; font-weight: 800; box-shadow: 0 10px 25px rgba(74,168,255,0.25); transition: 0.25s; }
+        .start-btn:hover { transform: translateY(-3px); }
+
+        .arrow-btn { background: #fff; border: 2px solid #4aa8ff; color: #4aa8ff; border-radius: 50%; width: 36px; height: 36px; font-size: 1rem; font-weight: 900; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+        .arrow-btn:hover { background: #eef6ff; transform: scale(1.1); }
+        .arrow-btn:active { transform: scale(0.9); }
+
+        .input-name { padding: 10px; font-size: 16px; border-radius: 12px; border: 2px solid #ddd; margin-right: 10px; width: 220px; text-align: center; font-family: inherit; font-weight: 700; outline: none; color: #333; }
+        .input-name:focus { border-color: #4aa8ff; }
+        .btn-save { padding: 10px 20px; font-size: 16px; background: linear-gradient(135deg, #ffe066, #fcc419); color: #333; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; box-shadow: 0 5px 15px rgba(250,176,5,0.2); transition: 0.2s; }
+        .btn-save:hover { transform: translateY(-2px); }
+        
+        .btn-back { padding: 10px 20px; font-size: 16px; background: #fff; color: #555; border: 1px solid #ddd; border-radius: 12px; cursor: pointer; margin-top: 10px; font-weight: 700; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: 0.2s; }
+        .btn-back:hover { background: #f8fafc; transform: translateY(-2px); }
+
+        #history-box { max-height: 95px; overflow: hidden; transition: max-height 0.4s ease-in-out; margin-bottom: 5px; margin-top: 5px; position: relative; z-index: 20; }
+        #history-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 10px; background: rgba(255, 255, 255, 0.95); border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.05); }
+        .hist-item { font-size: 10px; padding: 4px 2px; border-radius: 8px; text-align: center; font-weight: 800; line-height: 1.3; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; word-break: break-all; }
+        .hist-correct { background: rgba(43, 138, 62, 0.12); color: #2b8a3e; border: 1px solid rgba(43, 138, 62, 0.25); }
+        .hist-incorrect { background: rgba(201, 42, 42, 0.12); color: #c92a2a; border: 1px solid rgba(201, 42, 42, 0.25); }
+        .hist-choice { font-size: 11px; margin-top: 2px; }
+        .hist-period-header { grid-column: 1 / -1; background: rgba(250, 176, 5, 0.15); color: #d4a000; font-size: 12px; font-weight: 800; text-align: left; padding: 4px 12px; border-radius: 8px; margin-top: 2px; margin-bottom: 2px; }
+
+        /* 🌟 修正：吹き出しの横幅固定と被り防止 */
+        .prof-bubble-large { 
+            background: rgba(255, 255, 255, 0.95); 
+            border: 3px solid #4aa8ff; 
+            border-radius: 20px; 
+            padding: 12px 16px; 
+            font-size: 0.95rem; 
+            font-weight: 800; 
+            color: #333; 
+            box-shadow: 0 10px 25px rgba(74,168,255,0.25); 
+            position: relative; 
+            text-align: left; 
+            line-height: 1.6; 
+            display: inline-block; 
+            transition: 0.2s; 
+            width: 220px; /* 固定幅 */
+            box-sizing: border-box; 
+        }
+        .prof-bubble-large::after, .prof-bubble-large::before { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-style: solid; width: 0; }
+        .prof-bubble-large::before { border-width: 12px 12px 0; border-color: #4aa8ff transparent transparent transparent; bottom: -12px; } 
+        .prof-bubble-large::after { border-width: 8px 8px 0; border-color: rgba(255,255,255,0.95) transparent transparent transparent; bottom: -8px; }
+        
+        /* 🌟 修正：右端に寄せ、z-indexを高めに設定 */
+        #start-ozawa-wrapper { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            z-index: 50; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+        #start-ozawa-wrapper:hover { transform: scale(1.05); }
+        #start-ozawa-img { width: 240px; height: 240px; object-fit: contain; object-position: bottom; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15)); transition: 0.2s; }
+        
+        #result-ozawa-img-area { margin-top: 10px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        #result-ozawa-img-area:hover { transform: scale(1.05); }
+        #result-ozawa-img { width: 180px; height: 180px; object-fit: contain; object-position: bottom; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15)); transition: 0.2s; }
+    </style>
+</head>
+<body>
+    <div class="blur-circle blue-main"></div>
+    <div class="blur-circle blue-sub"></div>
+
+    <h1 class="game-title">貸借対照表バランサー！</h1>
+
+    <div id="start-screen">
+        <button type="button" onclick="playBackTopAndGo('index.html')" class="top-return-btn" id="top-return-btn">← トップページに戻る</button>
+        
+        <div id="start-ozawa-wrapper" class="floating" onclick="talkToProf('start')">
+            <div id="start-ozawa-bubble" class="prof-bubble-large" style="margin-bottom: 20px;">さぁ、貸借対照表を美しくバランスさせようじゃないか！</div>
+            <img id="start-ozawa-img" src="picture/ozawasensei/ozawa_default.png" alt="小澤先生">
+        </div>
+
+        <div class="menu-container glass-panel">
+            <div class="mode-tabs">
+                <button type="button" id="tab-score" class="tab-btn active" onclick="switchMenuMode('score')">スコアアタック</button>
+                <button type="button" id="tab-stage" class="tab-btn" onclick="switchMenuMode('stage')">ステージモード</button>
+                <button type="button" id="tab-versus" class="tab-btn" onclick="switchMenuMode('versus')">対戦モード</button>
+            </div>
+            
+            <div id="score-menu">
+                <p class="game-desc">
+                    上から落ちてくる勘定科目を瞬時に仕訳しよう！<br>
+                    連続正解で「1会計期間」をクリアすると、時間が回復しボーナス獲得！<br>
+                    <span>ただし、間違えると時間が減少し、コンボも没収だ！</span><br><br>
+                    <span style="color:#4aa8ff; font-weight:800;">【操作方法】</span><br>
+                    🖱️ 画面下部の「借方」「貸方」ボタンをクリック<br>
+                    💻 キーボードの「←」キー / 「→」キー
+                </p>
+                <div style="margin-bottom: 20px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <label for="level-select">コース選択:</label>
+                    <select id="level-select" class="setting-select" onchange="updateRankingUI()">
+                        <option value="3">簿記3級コース</option>
+                        <option value="2">簿記2級コース</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 30px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <label for="time-select">制限時間:</label>
+                    <select id="time-select" class="setting-select" onchange="updateRankingUI()">
+                        <option value="30">30秒（超速チャレンジ）</option>
+                        <option value="45">45秒（ノーマル）</option>
+                        <option value="60">60秒（じっくりプレイ）</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="stage-menu" style="display:none;">
+                <p class="game-desc">
+                    制限時間内に「目標スコア」への到達を目指すモードだ！<br>
+                    <span>目標スコアに到達した瞬間にステージクリア！</span><br>
+                    途切れないコンボによる「倍率アップ」がカギだ。<br><br>
+                    <span style="color:#4aa8ff; font-weight:800;">【操作方法】</span><br>
+                    🖱️ 画面下部の「借方」「貸方」ボタンをクリック<br>
+                    💻 キーボードの「←」キー / 「→」キー
+                </p>
+                <div style="margin-bottom: 20px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <label for="stage-select">挑戦ステージ:</label>
+                    <select id="stage-select" class="setting-select" onchange="updateStageClearUI()">
+                        <option value="1">Stage 1 (入門)</option>
+                        <option value="2">Stage 2 (初級)</option>
+                        <option value="3">Stage 3 (初中級)</option>
+                        <option value="4">Stage 4 (中級)</option>
+                        <option value="5">Stage 5 (中上級)</option>
+                        <option value="6">Stage 6 (上級)</option>
+                        <option value="7">Stage 7 (特級)</option>
+                        <option value="8">Stage 8 (プロ級)</option>
+                        <option value="9">Stage 9 (地獄)</option>
+                        <option value="10">Stage 10 (鬼畜)</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 30px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <label for="stage-time-select">制限時間:</label>
+                    <select id="stage-time-select" class="setting-select" onchange="updateStageClearUI()">
+                        <option value="30">30秒</option>
+                        <option value="45">45秒</option>
+                        <option value="60">60秒</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="versus-menu" style="display:none;">
+                <p class="game-desc">
+                    1台のPCで2人対戦！科目を正しく仕訳して相手の資金を奪い取れ！<br>
+                    <span>相手のゲージを空にするか、時間切れ時に資金が多い方が勝利だ！</span><br><br>
+                    <span style="color:#4aa8ff; font-weight:800;">【操作方法】</span><br>
+                    🎮 1P(左): <code>A</code>キー (借方) / <code>D</code>キー (貸方)<br>
+                    🎮 2P(右): <code>←</code>キー (借方) / <code>→</code>キー (貸方)<br>
+                    <span style="font-size:0.85rem; color:#666;">※画面のボタンクリックでも操作可能です</span>
+                </p>
+                <div style="margin-bottom: 20px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <label for="vs-level-select">コース選択:</label>
+                    <select id="vs-level-select" class="setting-select">
+                        <option value="3">簿記3級コース</option>
+                        <option value="2">簿記2級コース</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 30px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <label for="vs-time-select">制限時間:</label>
+                    <select id="vs-time-select" class="setting-select">
+                        <option value="30">30秒（超速バトル）</option>
+                        <option value="45">45秒（ノーマル）</option>
+                        <option value="60">60秒（じっくり勝負）</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bgm-selector" style="margin-bottom: 20px; font-weight: 700; color: #555; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <label>BGMプレイリスト:</label>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button type="button" class="arrow-btn" onclick="changeBgm(-1)">◀</button>
+                    <div id="bgm-display" style="font-size: 1.2rem; font-weight: 900; color: #4aa8ff; width: 50px; text-align: center;">1</div>
+                    <button type="button" class="arrow-btn" onclick="changeBgm(1)">▶</button>
+                </div>
+            </div>
+            
+            <button type="button" class="start-btn" onclick="startFromUI()">ゲームスタート！</button>
+        </div>
+
+        <div id="ranking-board" class="glass-panel board-wrap">
+            <h3>🏆 トップ10 スコアランキング 🏆</h3>
+            <div id="current-ranking-mode" class="ranking-mode-title">3級コース / 30秒</div>
+            <ol id="ranking-list" class="ranking-list"></ol>
+            <button type="button" class="btn-reset" onclick="resetRanking()">現在のランキングをリセット</button>
+        </div>
+        <div id="stage-board" class="glass-panel board-wrap" style="display:none;">
+            <h3>👑 殿堂入りプレイヤー 👑</h3>
+            <div id="current-stage-mode" class="ranking-mode-title">Stage 1 / 30秒</div>
+            <ul id="stage-clear-list" class="ranking-list" style="list-style: none; padding-left: 10px;"></ul>
+            <button type="button" class="btn-reset" onclick="resetRanking()">このステージの記録をリセット</button>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <button type="button" class="top-return-btn" style="top: 20px; right: 20px; left: auto; background: #fff; color: #ff6b81; border: 1px solid #ff6b81;" onclick="interruptGame()">⏸ やめる</button>
+        <div id="game-mode-display" style="text-align: center; color: #4aa8ff; font-size: 15px; margin-bottom: 5px; font-weight: 800;">▶ <span id="display-mode-text"></span></div>
+        <div id="normal-indicator" class="side-indicator"><div class="indicator-left">← 借方 (資産・費用)</div><div class="indicator-right">貸方 (負債・純資産・収益) →</div></div>
+
+        <div id="ui">
+            <div id="timer-container">残り時間: <span id="timer">--</span>秒</div>
+            <div id="period-container">
+                <div id="score-period-ui" style="color: #fcc419; font-size: 24px; font-weight: 800;">第 <span id="period">1</span> 期</div>
+                <div id="stage-ui" style="display: none; color: #4aa8ff; font-size: 20px; font-weight: 800;">Stage <span id="current-stage-display">1</span></div>
+                <div id="alert-msg" class="alert">不正会計!!</div>
+            </div>
+            <div id="score-container"><div>獲得: <span id="score">0</span> 円</div><span class="combo-info">🔥 Combo: <span id="combo">0</span> / 倍率: <span id="multiplier">x1.0</span></span></div>
+        </div>
+
+        <div id="game-board">
+            <div id="left-pile" class="side left-side"><h3>借方 (資産・費用)</h3></div>
+            <div id="right-pile" class="side right-side"><h3>貸方 (負債・純資産・収益)</h3></div>
+
+            <div id="stage-progress-container" style="display: none;">
+                <div class="stage-target-label">目標到達まで あと</div>
+                <div class="stage-target-score"><span id="remaining-score">0</span> 円</div>
+                <div class="stage-bar-bg"><div id="stage-progress-bar"></div></div>
+            </div>
+
+            <div id="current-block"><span id="block-name">勘定科目</span><br><span id="block-amount" style="font-size: 14px; font-weight: 700; opacity: 0.85;">¥10,000</span></div>
+        </div>
+
+        <div id="versus-board" style="display: none;">
+            <div class="vs-side-panel p1" id="p1-area">
+                <div class="vs-content">
+                    <h3 style="color: #4aa8ff; margin-bottom: 5px; font-weight: 900;">1P (A / D)</h3>
+                    <div style="font-size:0.9rem; font-weight:800; color:#777;">現在評価額</div>
+                    <div id="p1-score-disp" class="vs-score-disp">¥5,000,000</div>
+                    <div class="vs-combo-disp">Combo: <span id="p1-combo-disp">0</span></div>
+                    
+                    <div id="p1-block" class="vs-block-wrap" style="position: relative; margin-top: auto;">
+                        <span id="p1-block-name" style="font-size: 1.4rem; font-weight: 800;">現金</span><br>
+                        <span id="p1-block-amount" style="font-size: 1rem; font-weight: 700; opacity: 0.9;">¥100,000</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                        <button class="play-btn" style="background: linear-gradient(135deg, #74c2ff, #4aa8ff); color: white; font-size: 0.9rem; padding: 12px; flex: 1; border-radius: 12px;" onclick="judgeVersus(1, 'left')">A 借方</button>
+                        <button class="play-btn" style="background: linear-gradient(135deg, #74c2ff, #4aa8ff); color: white; font-size: 0.9rem; padding: 12px; flex: 1; border-radius: 12px;" onclick="judgeVersus(1, 'right')">D 貸方</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vs-center-pillars">
+                <div id="vs-timer-container" style="text-align: center; margin-bottom: 15px; background: #fff; padding: 8px 15px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); width: 100%;">
+                    <div style="font-size: 0.8rem; font-weight: 800; color: #888;">残り時間</div>
+                    <div id="vs-timer" style="font-size: 1.8rem; font-weight: 900; color: #ff6b81; text-shadow: 0 2px 4px rgba(255,107,129,0.2);">--</div>
+                </div>
+                <div class="vs-pillar-label">資金ゲージ</div>
+                <div class="vs-pillars-container">
+                    <div class="vs-pillar-wrap p1">
+                        <div class="vs-pillar"><div id="p1-gauge" class="vs-gauge-fill"></div></div>
+                        <div class="vs-pillar-name" style="color: #4aa8ff;">1P</div>
+                    </div>
+                    <div class="vs-pillar-wrap p2">
+                        <div class="vs-pillar"><div id="p2-gauge" class="vs-gauge-fill"></div></div>
+                        <div class="vs-pillar-name" style="color: #ff6b81;">2P</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vs-side-panel p2" id="p2-area">
+                <div class="vs-content">
+                    <h3 style="color: #ff6b81; margin-bottom: 5px; font-weight: 900;">2P (← / →)</h3>
+                    <div style="font-size:0.9rem; font-weight:800; color:#777;">現在評価額</div>
+                    <div id="p2-score-disp" class="vs-score-disp">¥5,000,000</div>
+                    <div class="vs-combo-disp">Combo: <span id="p2-combo-disp">0</span></div>
+                    
+                    <div id="p2-block" class="vs-block-wrap" style="position: relative; margin-top: auto;">
+                        <span id="p2-block-name" style="font-size: 1.4rem; font-weight: 800;">売掛金</span><br>
+                        <span id="p2-block-amount" style="font-size: 1rem; font-weight: 700; opacity: 0.9;">¥100,000</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px; width: 100%;">
+                        <button class="play-btn" style="background: linear-gradient(135deg, #ff9aa7, #ff6b81); color: white; font-size: 0.9rem; padding: 12px; flex: 1; border-radius: 12px;" onclick="judgeVersus(2, 'left')">← 借方</button>
+                        <button class="play-btn" style="background: linear-gradient(135deg, #ff9aa7, #ff6b81); color: white; font-size: 0.9rem; padding: 12px; flex: 1; border-radius: 12px;" onclick="judgeVersus(2, 'right')">貸方 →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="normal-controls" style="margin-top: 10px; display: flex; justify-content: space-between; max-width: 800px; margin-left: auto; margin-right: auto;">
+            <button type="button" class="play-btn btn-left" onclick="judge('left')">← 借方に仕訳</button>
+            <button type="button" class="play-btn btn-right" onclick="judge('right')">貸方に仕訳 →</button>
+        </div>
+    </div>
+
+    <div id="result-screen">
+        <div class="menu-container glass-panel">
+            <h2 id="result-title" style="color: #ff6b81; font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">タイムアップ！</h2>
+            
+            <div id="normal-result-ui">
+                <p id="result-desc-1" style="font-size: 18px; color: #444; font-weight: 700; margin-bottom: 5px;">最終到達：第 <span id="result-period" style="color: #fcc419; font-weight: 800;"></span> 期</p>
+                <p id="result-score-text" style="font-size: 22px; color: #444; font-weight: 800; margin-bottom: 10px;">最終スコア：<span id="result-score" style="color: #4aa8ff; font-weight: 800;"></span> 円</p>
+                <p id="result-time-text" style="display:none; font-size: 22px; color: #444; font-weight: 800; margin-bottom: 10px;">クリアタイム：残り <span id="result-time-left" style="color: #2b8a3e; font-weight: 800;"></span> 秒</p>
+                <div style="font-size: 20px; font-weight: 800; color: #2b8a3e; margin-bottom: 5px;">正答率: <span id="accuracy-rate">0</span>%</div>
+
+                <div id="history-box"><div id="history-grid"></div></div>
+                <div style="text-align: center; margin-bottom: 20px;"><button type="button" id="history-toggle-btn" onclick="toggleHistory()" style="background: rgba(74,168,255,0.1); border: none; font-size: 12px; font-weight: 800; cursor: pointer; color: #4aa8ff; padding: 6px 16px; border-radius: 99px; transition: 0.2s;">▼ すべての仕訳履歴を見る</button></div>
+            </div>
+
+            <div id="versus-result-ui" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 2px solid #ddd;">
+                    <div style="text-align: center; width: 45%;">
+                        <div style="color:#4aa8ff; font-weight: 800; font-size: 1.2rem;">1P</div>
+                        <div id="vs-res-p1-score" style="font-size: 1.5rem; font-weight: 900; color: #333;">¥10,000,000</div>
+                        <div id="vs-res-p1-per" style="font-size: 1.2rem; color: #888; font-weight: 800;">50%</div>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 900; color: #ccc;">VS</div>
+                    <div style="text-align: center; width: 45%;">
+                        <div style="color:#ff6b81; font-weight: 800; font-size: 1.2rem;">2P</div>
+                        <div id="vs-res-p2-score" style="font-size: 1.5rem; font-weight: 900; color: #333;">¥10,000,000</div>
+                        <div id="vs-res-p2-per" style="font-size: 1.2rem; color: #888; font-weight: 800;">50%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="result-ozawa-img-area" class="floating" onclick="talkToProf('result')">
+                <div id="result-ozawa-bubble" class="prof-bubble-large" style="margin-bottom: 15px;">ここに評価メッセージ</div>
+                <img id="result-ozawa-img" src="picture/ozawasensei/ozawa_default.png">
+            </div>
+            
+            <div id="rank-in-message" style="background: rgba(74,168,255,0.08); padding: 20px; border-radius: 20px; border: 1px dashed rgba(74,168,255,0.3); margin-top: 10px; display: none;">
+                <h3 style="color: #4aa8ff; margin-top: 0; font-size: 1.3rem; font-weight: 800; margin-bottom: 10px;">🎉 <span id="rank-in-title">ランクイン！</span> 🎉</h3>
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.9rem; font-weight: 700;">名前を残してゼミの歴史に名を刻もう！</p>
+                <input type="text" id="player-name" class="input-name" placeholder="名前を入力（例：小澤太郎）" maxlength="15" onkeydown="if(event.key === 'Enter'){ saveScore(); event.preventDefault(); }">
+                <button type="button" class="btn-save" onclick="saveScore();">登録する</button>
+            </div>
+            
+            <button type="button" id="btn-back-title" class="btn-back" onclick="playSE('back_start'); backToStart();">タイトルに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        let currentBgmIndex = 1;
+        const bgm = new Audio(`sound/BGM/bs-balancer/bs-balancer_${currentBgmIndex}.mp3`);
+        bgm.loop = true;
+        bgm.volume = 0.4;
+
+        const seBackTop = new Audio('sound/SE/back_top.mp3');
+        const seSelect = new Audio('sound/SE/select.mp3');
+
+        let isExiting = false;
+
+        function playBackTopAndGo(url) {
+            isExiting = true;
+            isPlaying = false;
+            clearInterval(gameInterval);
+            bgm.pause(); 
+            // 🌟 修正：複製して再生
+            let soundClone = seBackTop.cloneNode(true);
+            soundClone.volume = seBackTop.volume || 1.0;
+            soundClone.play().catch(()=>{});
+            setTimeout(() => { window.location.href = url; }, 400);
+        }
+        
+        window.changeBgm = function(dir) {
+            playSE('modal_open');
+            currentBgmIndex += dir;
+            if (currentBgmIndex > 5) currentBgmIndex = 1;
+            if (currentBgmIndex < 1) currentBgmIndex = 5;
+            
+            const disp = document.getElementById('bgm-display');
+            if (currentBgmIndex === 5) {
+                disp.innerText = "なし";
+                bgm.pause();
+            } else {
+                disp.innerText = currentBgmIndex;
+                const wasPlaying = !bgm.paused;
+                bgm.src = `sound/BGM/bs-balancer/bs-balancer_${currentBgmIndex}.mp3`;
+                if (wasPlaying && isPlaying) {
+                    bgm.play().catch(e => console.log("BGM play failed", e));
+                }
+            }
+        };
+
+        const level3Accounts = [
+            { name: "現金", side: "left" }, { name: "当座預金", side: "left" }, { name: "普通預金", side: "left" },
+            { name: "売掛金", side: "left" }, { name: "受取手形", side: "left" }, { name: "電子記録債権", side: "left" },
+            { name: "商品", side: "left" }, { name: "前払金", side: "left" }, { name: "立替金", side: "left" }, { name: "仮払金", side: "left" },
+            { name: "建物", side: "left" }, { name: "備品", side: "left" }, { name: "土地", side: "left" },
+            { name: "仕入", side: "left" }, { name: "給料", side: "left" }, { name: "支払家賃", side: "left" },
+            { name: "水道光熱費", side: "left" }, { name: "消耗品費", side: "left" }, { name: "通信費", side: "left" },
+            { name: "旅費交通費", side: "left" }, { name: "租税公課", side: "left" }, { name: "支払保険料", side: "left" },
+            { name: "雑損", side: "left" }, { name: "固定資産売却損", side: "left" },
+            { name: "買掛金", side: "right" }, { name: "支払手形", side: "right" }, { name: "電子記録債務", side: "right" },
+            { name: "借入金", side: "right" }, { name: "未払金", side: "right" }, { name: "前受金", side: "right" },
+            { name: "預り金", side: "right" }, { name: "仮受金", side: "right" }, { name: "未払法人税等", side: "right" },
+            { name: "資本金", side: "right" }, { name: "繰越利益剰余金", side: "right" },
+            { name: "売上", side: "right" }, { name: "受取手数料", side: "right" }, { name: "受取利息", side: "right" },
+            { name: "固定資産売却益", side: "right" }, { name: "雑益", side: "right" }
+        ];
+        const level2Accounts = [
+            { name: "ソフトウェア", side: "left" }, { name: "のれん", side: "left" }, { name: "特許権", side: "left" },
+            { name: "リース資産", side: "left" }, { name: "建設仮勘定", side: "left" }, { name: "ソフトウェア仮勘定", side: "left" },
+            { name: "開発費", side: "left" }, { name: "仕掛品", side: "left" }, { name: "売買目的有価証券", side: "left" },
+            { name: "満期保有目的債券", side: "left" }, { name: "子会社株式", side: "left" }, { name: "その他有価証券", side: "left" },
+            { name: "不渡手形", side: "left" }, { name: "営業外受取手形", side: "left" }, { name: "クレジット売掛金", side: "left" },
+            { name: "前払費用", side: "left" }, { name: "未収収益", side: "left" }, { name: "仮払法人税等", side: "left" },
+            { name: "減価償却費", side: "left" }, { name: "有価証券評価損", side: "left" }, { name: "社債発行費", side: "left" }, { name: "退職給付費用", side: "left" },
+            { name: "退職給付引当金", side: "right" }, { name: "貸倒引当金", side: "right" }, { name: "賞与引当金", side: "right" },
+            { name: "修繕引当金", side: "right" }, { name: "商品保証引当金", side: "right" }, { name: "社債", side: "right" }, 
+            { name: "リース債務", side: "right" }, { name: "営業外支払手形", side: "right" }, { name: "契約負債", side: "right" }, 
+            { name: "未払費用", side: "right" }, { name: "前受収益", side: "right" }, { name: "未払配当金", side: "right" },
+            { name: "繰延税金負債", side: "right" }, { name: "資本準備金", side: "right" }, { name: "利益準備金", side: "right" }, 
+            { name: "その他有価証券評価差額金", side: "right" }, { name: "有価証券売却益", side: "right" }
+        ];
+
+        const stageConfig = {
+            1: { numLevel3: 10, numLevel2: 0,  target: {30: 2000000, 45: 3200000, 60: 4600000} },
+            2: { numLevel3: 15, numLevel2: 0,  target: {30: 2600000, 45: 4000000, 60: 5600000} },
+            3: { numLevel3: 20, numLevel2: 0,  target: {30: 3200000, 45: 5000000, 60: 7000000} },
+            4: { numLevel3: 25, numLevel2: 0,  target: {30: 4000000, 45: 6200000, 60: 8600000} },
+            5: { numLevel3: 40, numLevel2: 0,  target: {30: 4800000, 45: 7400000, 60: 10400000} }, 
+            6: { numLevel3: 40, numLevel2: 5,  target: {30: 5600000, 45: 8600000, 60: 12000000} },
+            7: { numLevel3: 40, numLevel2: 10, target: {30: 6600000, 45: 10000000, 60: 14000000} },
+            8: { numLevel3: 40, numLevel2: 20, target: {30: 7600000, 45: 11600000, 60: 16000000} },
+            9: { numLevel3: 40, numLevel2: 30, target: {30: 8800000, 45: 13400000, 60: 18400000} },
+            10:{ numLevel3: 40, numLevel2: 39, target: {30: 10000000, 45: 15200000, 60: 21000000} }
+        };
+
+        let currentGameMode = 'score'; 
+        let currentStage = 1;
+        let currentTargetScore = 0;
+
+        let activeAccounts = [];
+        let score = 0;
+        let combo = 0;
+        let timeLeft = 0; 
+        let gameInterval;
+        let isPlaying = false;
+        let currentAccount = null;
+        let currentAmount = 0;
+        let currentPeriod = 1; 
+        let turnQueue = [];    
+        let playHistory = []; 
+
+        const VS_MAX_FUNDS = 10000000; 
+        let p1Funds = VS_MAX_FUNDS / 2;
+        let p2Funds = VS_MAX_FUNDS / 2;
+        let p1Combo = 0; let p2Combo = 0;
+        let p1Queue = []; let p2Queue = [];
+        let p1Account = null; let p2Account = null;
+        let p1Amount = 0; let p2Amount = 0;
+
+        let allHighScores = JSON.parse(localStorage.getItem('ozawa_scores_v3')) || {}; 
+
+        const elStartScreen = document.getElementById("start-screen");
+        const elGameScreen = document.getElementById("game-screen");
+        const elResultScreen = document.getElementById("result-screen");
+        const elScore = document.getElementById("score");
+        const elCombo = document.getElementById("combo");
+        const elMultiplier = document.getElementById("multiplier");
+        const elTimer = document.getElementById("timer");
+        const elPeriod = document.getElementById("period");
+        const elBlockName = document.getElementById("block-name");
+        const elBlockAmount = document.getElementById("block-amount");
+        const elLeftPile = document.getElementById("left-pile");
+        const elRightPile = document.getElementById("right-pile");
+        const elAlert = document.getElementById("alert-msg");
+
+        const seCorrect = new Audio('sound/SE/correct.mp3');
+        const seWrong = new Audio('sound/SE/wrong.mp3');
+        const seClear = new Audio('sound/SE/clear.mp3');
+        const sePeriodClear = new Audio('sound/SE/period_clear.mp3');
+        const seGameover = new Audio('sound/SE/gameover.mp3');
+        const seStart = new Audio('sound/SE/start.mp3');
+        const seResultGood = new Audio('sound/SE/result_good.mp3');
+        const seResultMid = new Audio('sound/SE/result_mid.mp3');
+        const seResultBad = new Audio('sound/SE/result_bad.mp3');
+        const seRegister = new Audio('sound/SE/register.mp3');
+        const seBackStart = new Audio('sound/SE/back_start.mp3');
+        const seProfClick = new Audio('sound/SE/prof_click.mp3');
+        const seJump = new Audio('sound/SE/jump.mp3');
+        const seModalOpen = new Audio('sound/SE/modal_open.mp3'); 
+        const seReset = new Audio('sound/SE/reset.mp3'); 
+
+        window.playSE = function(type) {
+            if (isExiting && type !== 'back_top') return;
+            
+            let se;
+            if (type === 'correct') se = seCorrect;
+            else if (type === 'wrong') se = seWrong;
+            else if (type === 'clear') se = seClear;
+            else if (type === 'period_clear') se = sePeriodClear;
+            else if (type === 'gameover') se = seGameover;
+            else if (type === 'start') se = seStart;
+            else if (type === 'result_good') se = seResultGood;
+            else if (type === 'result_mid') se = seResultMid;
+            else if (type === 'result_bad') se = seResultBad;
+            else if (type === 'register') se = seRegister;
+            else if (type === 'back_start') se = seBackStart;
+            else if (type === 'prof_click') se = seProfClick;
+            else if (type === 'jump') se = seJump;
+            else if (type === 'modal_open') se = seModalOpen; 
+            else if (type === 'reset') se = seReset; 
+            else if (type === 'back_top') se = seBackTop; 
+            else if (type === 'select') se = seSelect;
+            
+            if (se) {
+                // 🌟 修正：複製して再生
+                let soundClone = se.cloneNode(true);
+                soundClone.volume = se.volume || 1.0;
+                soundClone.play().catch(e => console.log("SE blocked"));
+            }
+        }
+
+        const ozawaMsgPool = {
+            start: [
+                { text: "さぁ、貸借対照表を美しくバランスさせようじゃないか！", img: "picture/ozawasensei/ozawa_default.png" },
+                { text: "借方と貸方、素早く判断するんだ！", img: "picture/ozawasensei/ozawa_laugh.png" },
+                { text: "不正会計は許さないぞ！集中して挑みたまえ。", img: "picture/ozawasensei/ozawa_angry.png" },
+                { text: "コンボを繋げばスコアは一気に跳ね上がるぞ！", img: "picture/ozawasensei/ozawa_default.png" }
+            ],
+            result_good: [
+                { text: "素晴らしい！君こそ小澤ゼミが誇る真のバランサーだ！", img: "picture/ozawasensei/ozawa_laugh.png" },
+                { text: "これだけの決算をこなすとは…将来有望だね！", img: "picture/ozawasensei/ozawa_laugh.png" },
+                { text: "殿堂入りを目指してさらに上を狙ってみよう！", img: "picture/ozawasensei/ozawa_default.png" }
+            ],
+            result_mid: [
+                { text: "まずまずの出来だね。君ならもっとスピードを上げられるはずだ。", img: "picture/ozawasensei/ozawa_default.png" },
+                { text: "落ち着いて仕訳すればもっとコンボが繋がるぞ。", img: "picture/ozawasensei/ozawa_default.png" },
+                { text: "次はステージモードにも挑戦してみてはどうかな？", img: "picture/ozawasensei/ozawa_laugh.png" }
+            ],
+            result_bad: [
+                { text: "なんだこの有様は！基礎から徹底的にやり直しだ！", img: "picture/ozawasensei/ozawa_angry.png" },
+                { text: "借方と貸方の区別がついていないんじゃないか？", img: "picture/ozawasensei/ozawa_angry.png" },
+                { text: "落ち着くんだ。深呼吸してもう一度やってみよう。", img: "picture/ozawasensei/ozawa_default.png" }
+            ],
+            versus_end: [
+                { text: "熱い戦いだったな！両者とも素晴らしい仕訳スピードだ！", img: "picture/ozawasensei/ozawa_laugh.png" },
+                { text: "勝負は時の運、しかし会計の知識は裏切らないぞ！", img: "picture/ozawasensei/ozawa_default.png" },
+                { text: "次はコースや制限時間を変えてリベンジマッチだ！", img: "picture/ozawasensei/ozawa_laugh.png" },
+                { text: "相手のミスを見逃さずコンボを繋ぐのが対戦の極意だ！", img: "picture/ozawasensei/ozawa_angry.png" },
+                { text: "一瞬の判断ミスが命取り。まさにビジネスの縮図だな。", img: "picture/ozawasensei/ozawa_default.png" }
+            ]
+        };
+        let currentOzawaPool = ozawaMsgPool.start;
+        let currentOzawaIndex = 0;
+
+        window.talkToProf = function(scene, playSound = true) {
+            if(playSound) playSE('prof_click');
+            currentOzawaIndex = (currentOzawaIndex + 1) % currentOzawaPool.length;
+            const data = currentOzawaPool[currentOzawaIndex];
+            let bubbleId = scene === 'start' ? 'start-ozawa-bubble' : 'result-ozawa-bubble';
+            let imgId = scene === 'start' ? 'start-ozawa-img' : 'result-ozawa-img';
+            let wrapperId = scene === 'start' ? 'start-ozawa-wrapper' : 'result-ozawa-img-area';
+            
+            const bubble = document.getElementById(bubbleId);
+            const img = document.getElementById(imgId);
+            const wrapper = document.getElementById(wrapperId);
+
+            if(bubble && img) {
+                bubble.innerHTML = data.text; 
+                img.src = data.img;
+
+                if (wrapper) {
+                    wrapper.style.animation = 'none';
+                    wrapper.offsetHeight; 
+                    wrapper.style.animation = 'float 3s ease-in-out infinite';
+                }
+            }
+        };
+
+        window.switchMenuMode = function(mode, playSound = true) {
+            if(playSound) playSE('jump'); 
+            currentGameMode = mode;
+            
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            if (mode === 'score') {
+                document.getElementById('tab-score').classList.add('active');
+                document.getElementById('score-menu').style.display = 'block'; 
+                document.getElementById('stage-menu').style.display = 'none';
+                document.getElementById('versus-menu').style.display = 'none';
+                document.getElementById('ranking-board').style.display = 'inline-block'; 
+                document.getElementById('stage-board').style.display = 'none';
+                updateRankingUI();
+            } else if (mode === 'stage') {
+                document.getElementById('tab-stage').classList.add('active');
+                document.getElementById('score-menu').style.display = 'none'; 
+                document.getElementById('stage-menu').style.display = 'block';
+                document.getElementById('versus-menu').style.display = 'none';
+                document.getElementById('ranking-board').style.display = 'none'; 
+                document.getElementById('stage-board').style.display = 'inline-block';
+                updateStageClearUI();
+            } else if (mode === 'versus') {
+                document.getElementById('tab-versus').classList.add('active');
+                document.getElementById('score-menu').style.display = 'none'; 
+                document.getElementById('stage-menu').style.display = 'none';
+                document.getElementById('versus-menu').style.display = 'block';
+                document.getElementById('ranking-board').style.display = 'none'; 
+                document.getElementById('stage-board').style.display = 'none';
+            }
+        };
+
+        function getCurrentModeKey() {
+            const level = document.getElementById("level-select").value; const time = document.getElementById("time-select").value; return `${level}_${time}`;
+        }
+        function getHighScoresForCurrentMode() {
+            const key = getCurrentModeKey(); if (!allHighScores[key]) allHighScores[key] = []; return allHighScores[key];
+        }
+        
+        function resetRanking() {
+            playSE('result_bad');
+            setTimeout(() => {
+                if (confirm("現在選択しているランキングをリセットしますか？\n（この操作は取り消せません）")) {
+                    playSE('reset');
+                    if (currentGameMode === 'score') {
+                        const key = getCurrentModeKey(); allHighScores[key] = []; localStorage.setItem('ozawa_scores_v3', JSON.stringify(allHighScores)); updateRankingUI();
+                    } else {
+                        const stage = document.getElementById("stage-select").value; const time = document.getElementById("stage-time-select").value;
+                        const key = `bs_stage_${stage}_${time}`; localStorage.removeItem(key); updateStageClearUI();
+                    }
+                } else {
+                    playSE('back_top');
+                }
+            }, 50);
+        }
+        
+        window.onload = () => { 
+            updateRankingUI(); 
+            currentOzawaPool = ozawaMsgPool.start; 
+            
+            document.querySelectorAll('select.setting-select').forEach(sel => {
+                sel.addEventListener('mousedown', (e) => {
+                    if(e.button === 0) playSE('modal_open');
+                });
+                sel.addEventListener('change', () => {
+                    playSE('select');
+                });
+            });
+        };
+
+        function startFromUI() {
+            window.scrollTo(0, 0); // 🌟 ゲーム開始時に一番上へ強制スクロール
+            playSE('start');
+            let selectedTime;
+            
+            if (currentGameMode === 'score') {
+                const selectedLevel = parseInt(document.getElementById("level-select").value); selectedTime = parseInt(document.getElementById("time-select").value);
+                const levelText = document.getElementById("level-select").options[document.getElementById("level-select").selectedIndex].text;
+                const timeText = document.getElementById("time-select").options[document.getElementById("time-select").selectedIndex].text;
+                document.getElementById("display-mode-text").innerText = `スコアアタック：${levelText} / ${timeText}`;
+                
+                if (selectedLevel === 3) activeAccounts = [...level3Accounts]; else if (selectedLevel === 2) activeAccounts = [...level3Accounts, ...level2Accounts];
+                
+                document.getElementById("ui").style.display = "flex";
+                document.getElementById("score-period-ui").style.display = "block"; document.getElementById("stage-ui").style.display = "none";
+                document.getElementById("score-container").style.display = "block";
+                document.getElementById("normal-indicator").style.display = "flex";
+                document.getElementById("game-board").style.display = "flex";
+                document.getElementById("left-pile").style.display = "flex"; document.getElementById("right-pile").style.display = "flex"; 
+                document.getElementById("stage-progress-container").style.display = "none";
+                document.getElementById("normal-controls").style.display = "flex";
+                document.getElementById("versus-board").style.display = "none";
+                
+            } else if (currentGameMode === 'stage') {
+                currentStage = parseInt(document.getElementById("stage-select").value); selectedTime = parseInt(document.getElementById("stage-time-select").value);
+                const stageText = document.getElementById("stage-select").options[document.getElementById("stage-select").selectedIndex].text;
+                document.getElementById("display-mode-text").innerText = `ステージモード：${stageText} / ${selectedTime}秒`;
+                
+                const conf = stageConfig[currentStage]; currentTargetScore = conf.target[selectedTime];
+                let l3 = [...level3Accounts].sort(()=>0.5-Math.random()).slice(0, conf.numLevel3); let l2 = [...level2Accounts].sort(()=>0.5-Math.random()).slice(0, conf.numLevel2); activeAccounts = [...l3, ...l2];
+                
+                document.getElementById("ui").style.display = "flex";
+                document.getElementById("score-period-ui").style.display = "none"; document.getElementById("stage-ui").style.display = "block"; document.getElementById("current-stage-display").innerText = currentStage;
+                document.getElementById("score-container").style.display = "block";
+                document.getElementById("normal-indicator").style.display = "flex";
+                document.getElementById("game-board").style.display = "flex";
+                document.getElementById("left-pile").style.display = "none"; document.getElementById("right-pile").style.display = "none"; 
+                document.getElementById("stage-progress-container").style.display = "flex";
+                document.getElementById("normal-controls").style.display = "flex";
+                document.getElementById("versus-board").style.display = "none";
+                
+            } else if (currentGameMode === 'versus') {
+                selectedTime = parseInt(document.getElementById("vs-time-select").value);
+                const levelText = document.getElementById("vs-level-select").options[document.getElementById("vs-level-select").selectedIndex].text;
+                document.getElementById("display-mode-text").innerText = `対戦モード：${levelText} / ${selectedTime}秒`;
+                
+                document.getElementById("ui").style.display = "none";
+                document.getElementById("normal-indicator").style.display = "none";
+                document.getElementById("game-board").style.display = "none";
+                document.getElementById("normal-controls").style.display = "none";
+                document.getElementById("versus-board").style.display = "flex";
+
+                p1Funds = VS_MAX_FUNDS / 2;
+                p2Funds = VS_MAX_FUNDS / 2;
+                p1Combo = 0; p2Combo = 0;
+            }
+            
+            startGame(selectedTime);
+        }
+
+        function startGame(startTime) {
+            elStartScreen.style.display = "none"; elResultScreen.style.display = "none"; elGameScreen.style.display = "block";
+            score = 0; combo = 0; currentPeriod = 1; timeLeft = startTime; isPlaying = true; playHistory = []; 
+            elTimer.style.color = "#ff6b81"; document.getElementById("score").style.color = "#4aa8ff";
+            
+            seCorrect.play().catch(()=>{}); seCorrect.pause(); seWrong.play().catch(()=>{}); seWrong.pause();
+            seClear.play().catch(()=>{}); seClear.pause(); sePeriodClear.play().catch(()=>{}); sePeriodClear.pause();
+            seGameover.play().catch(()=>{}); seGameover.pause(); seResultGood.play().catch(()=>{}); seResultGood.pause();
+            
+            if (currentBgmIndex !== 5) {
+                bgm.currentTime = 0;
+                bgm.play().catch(e => console.log("BGM play failed", e));
+            }
+            
+            if (currentGameMode === 'versus') {
+                document.getElementById("vs-timer").style.color = "#ff6b81";
+                generateQueueVs(1); generateQueueVs(2);
+                spawnBlockVs(1); spawnBlockVs(2);
+                updateVsUI();
+            } else {
+                clearPiles(); generateQueue(); spawnBlock(); updateUI();
+            }
+
+            clearInterval(gameInterval);
+            gameInterval = setInterval(() => { 
+                if (!isPlaying) return; 
+                timeLeft--; 
+                
+                if (currentGameMode === 'versus') updateVsUI(); else updateUI(); 
+                
+                if (timeLeft <= 0) { 
+                    timeLeft = 0; isPlaying = false; clearInterval(gameInterval); endGame(false); 
+                } 
+            }, 1000);
+        }
+
+        function generateQueue() {
+            turnQueue = []; const lefts = activeAccounts.filter(a => a.side === 'left'); const rights = activeAccounts.filter(a => a.side === 'right');
+            const pairsPerPeriod = 6; 
+            for(let i = 0; i < pairsPerPeriod; i++) { turnQueue.push(lefts[Math.floor(Math.random() * lefts.length)]); turnQueue.push(rights[Math.floor(Math.random() * rights.length)]); }
+            for (let i = turnQueue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [turnQueue[i], turnQueue[j]] = [turnQueue[j], turnQueue[i]]; }
+        }
+
+        function generateQueueVs(player) {
+            const lvl = parseInt(document.getElementById("vs-level-select").value);
+            let accs = [...level3Accounts];
+            if (lvl === 2) accs = [...level3Accounts, ...level2Accounts];
+
+            let queue = [];
+            const lefts = accs.filter(a => a.side === 'left');
+            const rights = accs.filter(a => a.side === 'right');
+            for(let i=0; i<6; i++) {
+                queue.push(lefts[Math.floor(Math.random() * lefts.length)]);
+                queue.push(rights[Math.floor(Math.random() * rights.length)]);
+            }
+            queue.sort(() => 0.5 - Math.random());
+            if (player === 1) p1Queue = queue; else p2Queue = queue;
+        }
+
+        function clearPiles() {
+            elLeftPile.innerHTML = '<h3>借方 (資産・費用)</h3>'; elRightPile.innerHTML = '<h3>貸方 (負債・純資産・収益)</h3>';
+        }
+
+        function spawnBlock() {
+            let baseAmt = 0;
+            if (currentGameMode === 'score') { baseAmt = (currentPeriod * 100000) + (Math.floor(Math.random() * 100) * 1000); } 
+            else { baseAmt = 100000 + (Math.floor(Math.random() * 100) * 1000); }
+            
+            let multiplier = 1.0 + (combo * 0.1);
+            currentAmount = Math.floor(baseAmt * multiplier);
+
+            currentAccount = turnQueue.shift(); 
+            elBlockName.innerText = currentAccount.name; 
+            elBlockAmount.innerText = "¥" + currentAmount.toLocaleString();
+        }
+
+        function spawnBlockVs(player) {
+            let baseAmt = 100000 + (Math.floor(Math.random() * 100) * 1000);
+            if (player === 1) {
+                let multiplier = Math.min(3.0, 1.0 + (p1Combo * 0.1));
+                p1Amount = Math.floor(baseAmt * multiplier);
+                p1Account = p1Queue.shift();
+                document.getElementById("p1-block-name").innerText = p1Account.name;
+                document.getElementById("p1-block-amount").innerText = "¥" + p1Amount.toLocaleString();
+            } else {
+                let multiplier = Math.min(3.0, 1.0 + (p2Combo * 0.1));
+                p2Amount = Math.floor(baseAmt * multiplier);
+                p2Account = p2Queue.shift();
+                document.getElementById("p2-block-name").innerText = p2Account.name;
+                document.getElementById("p2-block-amount").innerText = "¥" + p2Amount.toLocaleString();
+            }
+        }
+
+        document.addEventListener("keydown", (event) => { 
+            if (!isPlaying) return; 
+            
+            if (currentGameMode === 'versus') {
+                if (event.key.toLowerCase() === "a") judgeVersus(1, "left");
+                if (event.key.toLowerCase() === "d") judgeVersus(1, "right");
+                if (event.key === "ArrowLeft") judgeVersus(2, "left");
+                if (event.key === "ArrowRight") judgeVersus(2, "right");
+            } else {
+                if (event.key === "ArrowLeft") judge("left"); 
+                if (event.key === "ArrowRight") judge("right"); 
+            }
+        });
+
+        window.judgeVersus = function(player, choice) {
+            if (!isPlaying || currentGameMode !== 'versus') return;
+
+            let isCorrect = false;
+            let earnedAmount = 0;
+
+            if (player === 1) {
+                isCorrect = (choice === p1Account.side);
+                earnedAmount = p1Amount;
+
+                if (isCorrect) {
+                    p1Combo++;
+                    p1Funds += earnedAmount;
+                    p2Funds -= earnedAmount; 
+                    playSE('correct');
+                    showVsFloatText(1, `+¥${earnedAmount.toLocaleString()}`, 'vs-plus');
+                } else {
+                    p1Combo = 0;
+                    p1Funds -= earnedAmount;
+                    p2Funds += earnedAmount; 
+                    playSE('wrong');
+                    showVsFloatText(1, `-¥${earnedAmount.toLocaleString()}`, 'vs-minus');
+                }
+                if(p1Queue.length === 0) generateQueueVs(1);
+                spawnBlockVs(1);
+
+            } else {
+                isCorrect = (choice === p2Account.side);
+                earnedAmount = p2Amount;
+
+                if (isCorrect) {
+                    p2Combo++;
+                    p2Funds += earnedAmount;
+                    p1Funds -= earnedAmount; 
+                    playSE('correct');
+                    showVsFloatText(2, `+¥${earnedAmount.toLocaleString()}`, 'vs-plus');
+                } else {
+                    p2Combo = 0;
+                    p2Funds -= earnedAmount;
+                    p1Funds += earnedAmount; 
+                    playSE('wrong');
+                    showVsFloatText(2, `-¥${earnedAmount.toLocaleString()}`, 'vs-minus');
+                }
+                if(p2Queue.length === 0) generateQueueVs(2);
+                spawnBlockVs(2);
+            }
+
+            if (p1Funds > VS_MAX_FUNDS) { p1Funds = VS_MAX_FUNDS; p2Funds = 0; }
+            if (p2Funds > VS_MAX_FUNDS) { p2Funds = VS_MAX_FUNDS; p1Funds = 0; }
+            if (p1Funds < 0) { p1Funds = 0; p2Funds = VS_MAX_FUNDS; }
+            if (p2Funds < 0) { p2Funds = 0; p1Funds = VS_MAX_FUNDS; }
+
+            updateVsUI();
+
+            if (p1Funds >= VS_MAX_FUNDS || p2Funds >= VS_MAX_FUNDS) {
+                isPlaying = false;
+                clearInterval(gameInterval);
+                setTimeout(() => endGame(true), 300);
+            }
+        };
+
+        function judge(playerChoice) {
+            if (!isPlaying) return; 
+            
+            const earnedScore = currentAmount; 
+            const isCorrect = (playerChoice === currentAccount.side);
+            
+            playHistory.push({ name: currentAccount.name, correct: isCorrect, choice: playerChoice, period: currentGameMode === 'score' ? currentPeriod : null });
+
+            if (isCorrect) {
+                score += earnedScore; 
+                combo++;
+                
+                const isStageClear = (currentGameMode === 'stage' && score >= currentTargetScore);
+                const isPeriodClear = (currentGameMode === 'score' && turnQueue.length === 0);
+
+                if (isStageClear) {
+                    isPlaying = false; clearInterval(gameInterval);
+                    updateUI(); setTimeout(() => { endGame(true); }, 100); return;
+                }
+
+                if (isPeriodClear) {
+                    playSE('period_clear');
+                } else {
+                    playSE('correct');
+                }
+
+                if (currentGameMode === 'score') addBlockToPile(playerChoice, currentAccount.name, currentAmount);
+                showFloatingScore(playerChoice, earnedScore); 
+                showTotalScoreAnimation(earnedScore, 'correct'); 
+                
+                let nextMultiplier = 1.0 + (combo * 0.1);
+                showComboAnimation(`+0.1x`, 'up'); 
+                elAlert.style.display = "none"; elTimer.style.color = "#ff6b81"; 
+
+                if (isPeriodClear) {
+                    setTimeout(() => {
+                        const bonus = currentPeriod * 500000; score += bonus; timeLeft += 5; 
+                        showTimeAnimation(5, 'plus'); elTimer.style.color = "#00ff00";
+                        setTimeout(() => { elTimer.style.color = "#ff6b81"; }, 500); showTotalScoreAnimation(bonus, 'bonus'); 
+                        currentPeriod++; clearPiles(); generateQueue(); spawnBlock(); updateUI(); 
+                    }, 100); 
+                    return; 
+                } else if (turnQueue.length === 0) {
+                    generateQueue(); 
+                }
+            } else {
+                score -= earnedScore; 
+                combo = 0; 
+                playSE('wrong');
+                if (currentGameMode === 'score') { timeLeft -= 1; showTimeAnimation(1, 'minus'); }
+                showTotalScoreAnimation(earnedScore, 'wrong'); showComboAnimation('Combo Reset!', 'down'); elTimer.style.color = "#ff6b81";
+
+                if (timeLeft <= 0) { 
+                    timeLeft = 0; isPlaying = false; clearInterval(gameInterval); 
+                    updateUI(); endGame(false); return; 
+                }
+
+                elAlert.style.display = "block"; setTimeout(() => { elAlert.style.display = "none"; }, 1000);
+                if (currentGameMode === 'score') { clearPiles(); generateQueue(); } else { if (turnQueue.length === 0) generateQueue(); }
+            }
+            spawnBlock(); updateUI(); 
+        }
+
+        function addBlockToPile(side, name, amount) {
+            const block = document.createElement("div"); block.className = "block"; block.innerText = `${name} ¥${amount.toLocaleString()}`;
+            const pile = side === "left" ? elLeftPile : elRightPile; pile.appendChild(block);
+            if (currentGameMode === 'stage') { const blocks = pile.querySelectorAll('.block'); if (blocks.length > 5) { pile.removeChild(blocks[0]); } }
+        }
+
+        function showVsFloatText(player, text, className) {
+            const floatEl = document.createElement("div");
+            floatEl.className = `vs-float-text ${className}`;
+            floatEl.innerText = text;
+            const area = document.getElementById(player === 1 ? "p1-block" : "p2-block");
+            floatEl.style.left = "50%";
+            floatEl.style.transform = "translateX(-50%)";
+            floatEl.style.top = "-20px";
+            area.appendChild(floatEl);
+            setTimeout(() => { if (area.contains(floatEl)) area.removeChild(floatEl); }, 800);
+        }
+
+        function showFloatingScore(side, amount) {
+            const floatEl = document.createElement("div"); floatEl.className = "floating-score"; floatEl.innerText = "+ ¥" + amount.toLocaleString();
+            const pile = side === "left" ? elLeftPile : elRightPile; const randomX = Math.floor(Math.random() * 60) + 10;
+            floatEl.style.left = randomX + "%"; floatEl.style.bottom = "50px"; pile.appendChild(floatEl);
+            setTimeout(() => { if (pile.contains(floatEl)) pile.removeChild(floatEl); }, 1000);
+        }
+        function showTotalScoreAnimation(amount, type) {
+            const container = document.getElementById("score-container"); const floatEl = document.createElement("div");
+            if (type === 'correct') { floatEl.className = "floating-total total-plus"; floatEl.innerText = "+ ¥" + amount.toLocaleString(); } 
+            else if (type === 'wrong') { floatEl.className = "floating-total total-minus"; floatEl.innerText = "- ¥" + amount.toLocaleString(); } 
+            else if (type === 'bonus') { floatEl.className = "total-bonus"; floatEl.innerText = "🎉 BONUS + ¥" + amount.toLocaleString() + " 🎉"; }
+            container.appendChild(floatEl); const timeout = type === 'bonus' ? 1500 : 1000;
+            setTimeout(() => { if (container.contains(floatEl)) container.removeChild(floatEl); }, timeout);
+        }
+        function showComboAnimation(text, type) {
+            const container = document.getElementById("score-container"); const floatEl = document.createElement("div");
+            if (type === 'up') floatEl.className = "floating-combo"; else if (type === 'down') floatEl.className = "combo-reset";
+            floatEl.innerText = text; container.appendChild(floatEl);
+            setTimeout(() => { if (container.contains(floatEl)) container.removeChild(floatEl); }, 1000);
+        }
+        function showTimeAnimation(amount, type) {
+            const container = document.getElementById("timer-container"); const floatEl = document.createElement("div");
+            if (type === 'plus') { floatEl.className = "floating-time time-plus"; floatEl.innerText = "+" + amount + "秒"; } 
+            else if (type === 'minus') { floatEl.className = "floating-time time-minus"; floatEl.innerText = "-" + amount + "秒"; }
+            container.appendChild(floatEl); setTimeout(() => { if (container.contains(floatEl)) container.removeChild(floatEl); }, 1000);
+        }
+
+        function updateUI() {
+            elScore.innerText = score.toLocaleString(); elCombo.innerText = combo;
+            const currentMultiplier = 1.0 + (combo * 0.1); elMultiplier.innerText = `x${currentMultiplier.toFixed(1)}`;
+            elPeriod.innerText = currentPeriod; elTimer.innerText = timeLeft; 
+            if (currentGameMode === 'stage') {
+                const remaining = Math.max(0, currentTargetScore - score); document.getElementById("remaining-score").innerText = remaining.toLocaleString();
+                const progress = Math.min(100, (score / currentTargetScore) * 100); document.getElementById("stage-progress-bar").style.width = progress + "%";
+                if (score >= currentTargetScore) { document.getElementById("score").style.color = "#2b8a3e"; } else { document.getElementById("score").style.color = "#4aa8ff"; }
+            }
+        }
+
+        function updateVsUI() {
+            document.getElementById("vs-timer").innerText = timeLeft;
+            
+            document.getElementById("p1-score-disp").innerText = `¥${p1Funds.toLocaleString()}`;
+            document.getElementById("p2-score-disp").innerText = `¥${p2Funds.toLocaleString()}`;
+            
+            let p1Mul = Math.min(3.0, 1.0 + (p1Combo * 0.1));
+            let p2Mul = Math.min(3.0, 1.0 + (p2Combo * 0.1));
+            document.getElementById("p1-combo-disp").innerText = `${p1Combo} (x${p1Mul.toFixed(1)})`;
+            document.getElementById("p2-combo-disp").innerText = `${p2Combo} (x${p2Mul.toFixed(1)})`;
+
+            let p1Per = (p1Funds / VS_MAX_FUNDS) * 100;
+            let p2Per = (p2Funds / VS_MAX_FUNDS) * 100;
+            document.getElementById("p1-gauge").style.height = `${p1Per}%`;
+            document.getElementById("p2-gauge").style.height = `${p2Per}%`;
+        }
+
+        function generateHistoryUI() {
+            const grid = document.getElementById("history-grid"); grid.innerHTML = ""; let correctCount = 0; let currentPeriodRendered = 0;
+            playHistory.forEach(item => {
+                if (item.correct) correctCount++;
+                if (currentGameMode === 'score' && item.period !== currentPeriodRendered) {
+                    currentPeriodRendered = item.period; const header = document.createElement("div");
+                    header.className = "hist-period-header"; header.innerText = `▶ 第 ${currentPeriodRendered} 期`; grid.appendChild(header);
+                }
+                const div = document.createElement("div"); div.className = `hist-item ${item.correct ? 'hist-correct' : 'hist-incorrect'}`;
+                const choiceText = item.choice === 'left' ? '借' : '貸'; div.innerHTML = `<span>${item.name}</span><span class="hist-choice">${choiceText} ${item.correct ? '〇' : '✖'}</span>`; grid.appendChild(div);
+            });
+            const rate = playHistory.length > 0 ? Math.round((correctCount / playHistory.length) * 100) : 0; document.getElementById("accuracy-rate").innerText = rate;
+            const box = document.getElementById("history-box"); box.style.maxHeight = "95px"; box.style.overflowY = "hidden"; box.scrollTop = 0;
+            document.getElementById("history-toggle-btn").innerText = "▼ すべての仕訳履歴を見る";
+        }
+
+        window.toggleHistory = function() {
+            playSE('modal_open'); 
+            const box = document.getElementById("history-box"); const btn = document.getElementById("history-toggle-btn");
+            if (box.style.maxHeight === "95px" || box.style.maxHeight === "") { box.style.maxHeight = "220px"; box.style.overflowY = "auto"; btn.innerText = "▲ 閉じる"; } 
+            else { box.style.maxHeight = "95px"; box.style.overflowY = "hidden"; box.scrollTop = 0; btn.innerText = "▼ すべての仕訳履歴を見る"; }
+        };
+
+        function endGame(isStageClear = false) {
+            if (elResultScreen.style.display === "block") return; 
+            
+            isPlaying = false; clearInterval(gameInterval);
+            bgm.pause(); 
+            
+            elGameScreen.style.display = "none"; elResultScreen.style.display = "block"; 
+
+            if (currentGameMode === 'versus') {
+                document.getElementById("normal-result-ui").style.display = "none";
+                document.getElementById("rank-in-message").style.display = "none";
+                document.getElementById("btn-back-title").style.display = "inline-block";
+                document.getElementById("versus-result-ui").style.display = "block";
+
+                playSE('result_mid'); // 対戦終了時は常にコレ
+
+                let winner = "引き分け！";
+                let titleColor = "#333";
+                if (p1Funds > p2Funds) { winner = "1Pの勝利！！"; titleColor = "#4aa8ff"; }
+                else if (p2Funds > p1Funds) { winner = "2Pの勝利！！"; titleColor = "#ff6b81"; }
+
+                document.getElementById("result-title").innerText = winner;
+                document.getElementById("result-title").style.color = titleColor;
+
+                let p1Per = Math.round((p1Funds / VS_MAX_FUNDS) * 100);
+                let p2Per = Math.round((p2Funds / VS_MAX_FUNDS) * 100);
+
+                document.getElementById("vs-res-p1-score").innerText = `¥${p1Funds.toLocaleString()}`;
+                document.getElementById("vs-res-p1-per").innerText = `${p1Per}%`;
+                document.getElementById("vs-res-p2-score").innerText = `¥${p2Funds.toLocaleString()}`;
+                document.getElementById("vs-res-p2-per").innerText = `${p2Per}%`;
+
+                currentOzawaPool = ozawaMsgPool.versus_end;
+                currentOzawaIndex = -1; talkToProf('result', false);
+                return;
+            }
+
+            document.getElementById("normal-result-ui").style.display = "block";
+            document.getElementById("versus-result-ui").style.display = "none";
+            document.getElementById("result-score").innerText = score.toLocaleString();
+            generateHistoryUI(); 
+
+            let imgSrc = "picture/ozawasensei/ozawa_default.png"; let msg = "";
+
+            if (currentGameMode === 'score') {
+                document.getElementById("result-title").innerText = "タイムアップ！"; document.getElementById("result-title").style.color = "#ff6b81"; document.getElementById("result-score-text").style.display = "block";
+                document.getElementById("result-time-text").style.display = "none"; document.getElementById("result-desc-1").innerHTML = `最終到達：第 <span id="result-period" style="color: #fcc419; font-weight: 800;">${currentPeriod}</span> 期`;
+                
+                const timeMode = parseInt(document.getElementById("time-select").value);
+                if (currentPeriod === 1) {
+                    currentOzawaPool = ozawaMsgPool.result_bad; playSE('result_bad');
+                } else if ((timeMode === 30 && currentPeriod === 2) || (timeMode === 45 && (currentPeriod === 2 || currentPeriod === 3)) || (timeMode === 60 && (currentPeriod <= 4))) {
+                    currentOzawaPool = ozawaMsgPool.result_mid; playSE('result_mid');
+                } else {
+                    currentOzawaPool = ozawaMsgPool.result_good; playSE('result_good');
+                }
+                
+                const currentScores = getHighScoresForCurrentMode(); const rankIndex = getRankIndex(score, currentScores);
+                if (rankIndex >= 0) {
+                    document.getElementById("rank-in-message").style.display = "block"; document.getElementById("rank-in-title").innerText = `歴代 ${rankIndex + 1} 位にランクイン！`;
+                    document.getElementById("player-name").value = ""; document.getElementById("btn-back-title").style.display = "none"; 
+                } else {
+                    document.getElementById("rank-in-message").style.display = "none"; document.getElementById("btn-back-title").style.display = "inline-block";
+                }
+                
+            } else {
+                document.getElementById("result-score-text").style.display = "none"; document.getElementById("result-time-text").style.display = "block";
+                document.getElementById("result-time-left").innerText = timeLeft; 
+                
+                const stageText = document.getElementById("stage-select").options[document.getElementById("stage-select").selectedIndex].text;
+                document.getElementById("result-desc-1").innerHTML = `挑戦ステージ：<span style="color: #fcc419; font-weight: 800;">${stageText}</span>`;
+                
+                if (isStageClear) {
+                    playSE('clear'); 
+                    document.getElementById("result-title").innerText = "ステージクリア！！"; document.getElementById("result-title").style.color = "#2b8a3e";
+                    currentOzawaPool = [{ text: `見事！目標金額に到達だ！残りは ${timeLeft} 秒だったね！`, img: "picture/ozawasensei/ozawa_laugh.png" }, { text: `Stage ${currentStage} をクリアとは…おそるべし！`, img: "picture/ozawasensei/ozawa_laugh.png" }];
+                    document.getElementById("rank-in-message").style.display = "block"; document.getElementById("rank-in-title").innerText = `Stage ${currentStage} 殿堂入り！`;
+                    document.getElementById("player-name").value = ""; document.getElementById("btn-back-title").style.display = "none";
+                } else {
+                    playSE('gameover');
+                    document.getElementById("result-title").innerText = "タイムアップ！"; document.getElementById("result-title").style.color = "#ff6b81";
+                    currentOzawaPool = [{ text: `時間切れだ！目標到達まであと ${currentTargetScore - score} 円だったのに！`, img: "picture/ozawasensei/ozawa_angry.png" }, { text: "コンボを途切れさせてはダメじゃないか！", img: "picture/ozawasensei/ozawa_angry.png" }];
+                    document.getElementById("rank-in-message").style.display = "none"; document.getElementById("btn-back-title").style.display = "inline-block";
+                }
+            }
+            currentOzawaIndex = -1; talkToProf('result', false); 
+        }
+
+        function getRankIndex(newScore, currentScores) { for (let i = 0; i < 10; i++) { if (!currentScores[i] || newScore > currentScores[i].score) { return i; } } return -1; }
+        function escapeHTML(str) { return str.replace(/[&<>'"]/g, function(tag) { const chars = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }; return chars[tag] || tag; }); }
+
+        window.saveScore = function() {
+            let nameInput = document.getElementById("player-name").value.trim(); 
+            if (nameInput === "") nameInput = "名無しゼミ生";
+            
+            if (nameInput === "小澤康裕" || nameInput === "おざわみちひろ") { 
+                playSE('result_bad'); 
+                setTimeout(() => {
+                    const isOzawa = confirm("あなたは小澤先生ですか？"); 
+                    if (!isOzawa) { 
+                        playSE('back_top'); 
+                        const nameField = document.getElementById("player-name"); 
+                        nameField.value = ""; nameField.focus(); 
+                    } else {
+                        playSE('register');
+                        executeSaveScore("小澤康裕");
+                    }
+                }, 50);
+            } else {
+                playSE('register');
+                executeSaveScore(nameInput);
+            }
+        };
+
+        function executeSaveScore(nameInput) {
+            let safeName = escapeHTML(nameInput).substring(0, 15);
+            
+            if (currentGameMode === 'score') {
+                const key = getCurrentModeKey(); const currentScores = getHighScoresForCurrentMode(); const rankIndex = getRankIndex(score, currentScores);
+                if (rankIndex >= 0) { currentScores.splice(rankIndex, 0, { name: safeName, score: score, period: currentPeriod }); if (currentScores.length > 10) currentScores.pop(); allHighScores[key] = currentScores; localStorage.setItem('ozawa_scores_v3', JSON.stringify(allHighScores)); }
+            } else {
+                const stage = document.getElementById("stage-select").value; const time = document.getElementById("stage-time-select").value; const modeKey = `bs_stage_${stage}_${time}`;
+                let stageClears = JSON.parse(localStorage.getItem(modeKey)) || []; stageClears.push({ name: safeName, timeLeft: timeLeft, score: score }); localStorage.setItem(modeKey, JSON.stringify(stageClears));
+            }
+            backToStart(); 
+        }
+
+        function updateRankingUI() {
+            const levelText = document.getElementById("level-select").options[document.getElementById("level-select").selectedIndex].text;
+            const timeText = document.getElementById("time-select").options[document.getElementById("time-select").selectedIndex].text;
+            document.getElementById("current-ranking-mode").innerText = `${levelText} / ${timeText}`;
+            const list = document.getElementById("ranking-list"); list.innerHTML = ""; const currentScores = getHighScoresForCurrentMode();
+            if (currentScores.length === 0) { list.innerHTML = "<li style='color: #aaa; text-align: center;'>まだ記録がありません</li>"; return; }
+            currentScores.forEach((entry, index) => {
+                const li = document.createElement("li"); 
+                const periodText = entry.period ? `<span style="font-size: 0.85em; color: #888; font-weight: 700; margin-left: 6px;">(第${entry.period}期)</span>` : "";
+                
+                let dName = entry.name;
+                if (entry.name === "小澤康裕") {
+                    dName = `<span class="ozawa-aura">小澤康裕</span>`;
+                } else if (index === 0) {
+                    dName = `<span class="gold-aura">${entry.name}</span>`;
+                } else if (index === 1) {
+                    dName = `<span class="silver-aura">${entry.name}</span>`;
+                } else if (index === 2) {
+                    dName = `<span class="bronze-aura">${entry.name}</span>`;
+                }
+
+                if (index === 0) { li.innerHTML = `🥇 ${dName} : ¥${entry.score.toLocaleString()}${periodText}`; li.style.color = "#b8860b"; li.style.fontWeight = "bold"; } 
+                else if (index === 1) { li.innerHTML = `🥈 ${dName} : ¥${entry.score.toLocaleString()}${periodText}`; li.style.color = "#708090"; li.style.fontWeight = "bold"; } 
+                else if (index === 2) { li.innerHTML = `🥉 ${dName} : ¥${entry.score.toLocaleString()}${periodText}`; li.style.color = "#cd7f32"; li.style.fontWeight = "bold"; } 
+                else { li.innerHTML = `${dName} : ¥${entry.score.toLocaleString()}${periodText}`; li.style.color = "#555"; }
+                list.appendChild(li);
+            });
+        }
+
+        window.updateStageClearUI = function() {
+            const stage = document.getElementById("stage-select").value; const time = document.getElementById("stage-time-select").value;
+            
+            const stageText = document.getElementById("stage-select").options[document.getElementById("stage-select").selectedIndex].text;
+            document.getElementById("current-stage-mode").innerText = `${stageText} / ${time}秒`;
+            
+            const list = document.getElementById("stage-clear-list"); list.innerHTML = "";
+            const modeKey = `bs_stage_${stage}_${time}`; const stageClears = JSON.parse(localStorage.getItem(modeKey)) || [];
+            if (stageClears.length === 0) { list.innerHTML = "<li style='color: #aaa; text-align: center; margin-top: 10px;'>まだクリア者がいません</li>"; return; }
+            stageClears.sort((a, b) => b.timeLeft - a.timeLeft);
+            stageClears.forEach((entry, index) => {
+                const li = document.createElement("li"); 
+                
+                let dName = entry.name;
+                if (entry.name === "小澤康裕") {
+                    dName = `<span class="ozawa-aura">小澤康裕</span>`;
+                } else if (index === 0) {
+                    dName = `<span class="green-gold-aura">${entry.name}</span>`;
+                }
+
+                if (index === 0) {
+                    li.innerHTML = `<span style="font-size: 1.5em; text-shadow: 0 2px 5px rgba(251,191,36,0.4);">👑</span> <span style="font-weight: 900; font-size: 1.1em; color: #b8860b;">${dName}</span> <span style="font-size: 0.9em; color: #888; font-weight:700;">(残り ${entry.timeLeft}秒)</span>`; 
+                    li.style.marginBottom = "10px";
+                    li.style.borderBottom = "1px dashed #fcd34d";
+                    li.style.paddingBottom = "8px";
+                } else {
+                    li.innerHTML = `✨ <span style="font-weight: 800;">${dName}</span> <span style="font-size: 0.9em; color: #888;">(残り ${entry.timeLeft}秒)</span>`; 
+                    li.style.color = "#555"; 
+                    li.style.marginBottom = "5px"; 
+                }
+                list.appendChild(li);
+            });
+        };
+
+        // 🌟 修正：中断時のサウンド仕様適用
+        window.interruptGame = function() {
+            if (!isPlaying) return;
+            playSE('reset'); // 押した瞬間にリセット音
+            setTimeout(() => {
+                if (confirm("本当にスタート画面に戻りますか？\n現在のスコアや進行状況はすべて失われます。")) {
+                    isPlaying = false; 
+                    clearInterval(gameInterval);
+                    bgm.pause(); 
+                    window.scrollTo(0, 0); // スタート画面に戻る時も念のため一番上に
+                    playSE('back_start'); // OK時にスタートへ戻る音
+                    backToStart(false); 
+                } else {
+                    playSE('back_top'); // キャンセル時は戻る音
+                }
+            }, 50);
+        };
+
+        window.backToStart = function(playSound = false) {
+            window.scrollTo(0, 0); // スタート画面に戻るときも一番上へ
+            document.getElementById("rank-in-message").style.display = "none"; 
+            document.getElementById("btn-back-title").style.display = "inline-block";
+            elResultScreen.style.display = "none"; 
+            elGameScreen.style.display = "none"; 
+            elStartScreen.style.display = "block";
+            
+            currentOzawaPool = ozawaMsgPool.start; 
+            currentOzawaIndex = -1; 
+            talkToProf('start', playSound);
+            
+            switchMenuMode(currentGameMode, false);
+        };
+    </script>
+</body>
+</html>

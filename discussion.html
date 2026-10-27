@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ディスカッション体験ゲーム</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* 1画面に収めるため余白を削除し、スクロールを禁止 */
+body { 
+    margin: 0; padding: 0; 
+    font-family: 'M PLUS Rounded 1c', sans-serif; 
+    background: linear-gradient(180deg, #f5fbff 0%, #eef6ff 35%, #f7faff 100%); 
+    color: #333; display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
+}
+
+.blur-circle { position: fixed; border-radius: 50%; filter: blur(90px); z-index: -2; opacity: 0.45; }
+.blue-main { width: 280px; height: 280px; background: #7cc7ff; top: -60px; left: -40px; }
+.blue-sub { width: 340px; height: 340px; background: #b0d8ff; bottom: -80px; right: -80px; }
+
+/* 被らないように fixed かつ z-index を 1000 に設定 */
+.top-return-btn { position: fixed; top: 20px; left: 20px; background: rgba(255,255,255,0.9); color: #4aa8ff; padding: 10px 20px; border-radius: 99px; font-weight: 800; text-decoration: none; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(74,168,255,0.15); border: none; cursor: pointer; z-index: 1000; transition: 0.2s; display: inline-block; }
+.top-return-btn:hover { background: #4aa8ff; color: #fff; transform: scale(1.05); }
+
+/* margin-topを 90px に維持しつつ、コンテンツを縦方向の中央に配置 */
+.main-wrapper { display: flex; width: 100%; max-width: 1200px; margin: 90px auto 0 auto; gap: 24px; padding: 0 20px; flex-grow: 1; align-items: center; }
+.glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 10px 30px rgba(50, 120, 200, 0.06); position: relative; z-index: 5; }
+.sidebar-left { width: 25%; padding: 30px; height: fit-content; }
+.sidebar-left h2 { font-size: 1.3rem; color: #4aa8ff; margin-bottom: 20px; font-weight: 800; border-bottom: 2px dashed #b0d8ff; padding-bottom: 10px; }
+.sidebar-left p { line-height: 2.2; color: #555; font-weight: 700; font-size: 0.95rem; }
+.container { width: 50%; padding: 40px; text-align: center; display: flex; flex-direction: column; }
+.sidebar-right { width: 25%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; height: fit-content; align-self: center; background: transparent; box-shadow: none; border: none; }
+h2#text { font-size: 1.45rem; font-weight: 800; color: #222; margin-bottom: 20px; line-height: 1.6; min-height: 4.8rem; display: flex; align-items: center; justify-content: center; }
+.progress-wrapper { margin-bottom: 25px; }
+.progress-bar { width: 100%; height: 14px; background: #eef6ff; border-radius: 20px; overflow: hidden; border: 1px solid rgba(74,168,255,0.2); }
+#progress { height: 100%; width: 0%; background: linear-gradient(90deg, #74c2ff, #4aa8ff); transition: 0.4s ease-out; border-radius: 20px; }
+.progress-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.85rem; color: #4aa8ff; font-weight: 700; }
+
+/* BGMセレクタ用 */
+.bgm-selector { margin-bottom: 20px; font-weight: 800; color: #555; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.arrow-btn { background: #fff; border: 2px solid #4aa8ff; color: #4aa8ff; border-radius: 50%; width: 42px; height: 42px; font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(74,168,255,0.1); }
+.arrow-btn:hover { background: #eef6ff; transform: scale(1.1); }
+.arrow-btn:active { transform: scale(0.9); }
+
+#interactive-area { min-height: 320px; display: flex; flex-direction: column; width: 100%; align-items: center; justify-content: flex-start; }
+#choices { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+
+button.choice-btn { width: 100%; padding: 14px 20px; border: none; border-radius: 16px; background: white; color: #555; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; box-shadow: 0 6px 15px rgba(0,0,0,0.05); border: 2px solid transparent; text-align: left; line-height: 1.4; }
+button.choice-btn:hover:not(:disabled) { transform: translateY(-3px); border-color: #4aa8ff; color: #4aa8ff; box-shadow: 0 8px 20px rgba(74,168,255,0.15); }
+button.choice-btn:disabled { opacity: 0.9; cursor: default; }
+button.choice-btn.selected { border-color: #ff6b81; box-shadow: 0 0 10px rgba(255,107,129,0.3); background: #fff0f2; color: #c92a2a; }
+
+#feedback { width: 100%; min-height: 60px; font-size: 1.05rem; margin-bottom: 15px; color: #ff6b81; font-weight: 800; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 16px; display: none; border: 1px solid rgba(255,107,129,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box; }
+
+#next-step-btn { display: none; margin: 10px auto 0 auto; padding: 14px 50px; border-radius: 99px; background: linear-gradient(135deg, #4aa8ff, #74c2ff); color: white; font-weight: 800; font-size: 1.1rem; border: none; cursor: pointer; box-shadow: 0 6px 15px rgba(74,168,255,0.3); transition: 0.2s; }
+#next-step-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(74,168,255,0.4); }
+
+/* 吹き出しの横幅を固定して被りを防ぐ */
+.prof-bubble-large { 
+    background: rgba(255, 255, 255, 0.95); 
+    border: 3px solid #4aa8ff; 
+    border-radius: 20px; 
+    padding: 14px 18px; 
+    font-size: 0.95rem; 
+    font-weight: 800; 
+    color: #333; 
+    box-shadow: 0 10px 25px rgba(74,168,255,0.25); 
+    position: relative; 
+    text-align: left; 
+    line-height: 1.6; 
+    display: inline-block; 
+    margin-bottom: 15px; 
+    cursor: pointer; 
+    user-select: none; 
+    width: 240px; /* 固定幅 */
+    box-sizing: border-box;
+}
+.prof-bubble-large::after, .prof-bubble-large::before { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-style: solid; width: 0; }
+.prof-bubble-large::before { border-width: 12px 12px 0; border-color: #4aa8ff transparent transparent transparent; bottom: -12px; } 
+.prof-bubble-large::after { border-width: 8px 8px 0; border-color: rgba(255,255,255,0.95) transparent transparent transparent; bottom: -8px; }
+
+/* z-index を高めに設定し、右端に少し寄せる */
+#prof-container { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    z-index: 50; 
+}
+#prof-container:hover { transform: scale(1.05); }
+#prof-avatar { height: 200px; width: 200px; object-fit: contain; object-position: bottom; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15)); transition: 0.2s; }
+#current-theme-display { font-size: 1.15rem; color: #ff6b81; font-weight: 800; margin-bottom: 20px; display: none; text-align: center; border-bottom: 2px dashed #ff6b81; padding-bottom: 8px; width: fit-content; margin-left: auto; margin-right: auto; }
+
+.interrupt-btn { padding: 6px 16px; border: 1px solid #ddd; border-radius: 999px; background: #fff; color: #6b7280; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+.interrupt-btn:hover { background: #f9fafb; color: #333; transform: translateY(-2px); }
+
+.floating { animation: float 3s ease-in-out infinite; }
+@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+</style>
+</head>
+
+<body>
+<button type="button" onclick="playBackTopAndGo('index.html')" class="top-return-btn" id="top-return-btn">← トップページに戻る</button>
+
+<div class="blur-circle blue-main"></div>
+<div class="blur-circle blue-sub"></div>
+
+<div class="main-wrapper">
+    <div class="sidebar-left glass-panel">
+        <h2>📘 ディスカッションの流れ</h2>
+        <p>① 前提定義<br>→ 言葉や前提を揃える<br><br>② 課題特定<br>→ 何が本質か整理する<br><br>③ アイデア出し<br>→ 比較・具体化する<br><br>④ まとめ<br>→ 結論を論理的に整理</p>
+    </div>
+
+    <div class="container glass-panel">
+        <div id="controls" style="display:flex; justify-content:flex-start; margin-bottom: 15px; display:none;">
+            <button type="button" class="interrupt-btn" onclick="interruptTest()">⏸ やめる</button>
+        </div>
+
+        <div id="current-theme-display">テーマ：<span id="theme-name"></span></div>
+
+        <div class="progress-wrapper">
+            <div class="progress-bar"><div id="progress"></div></div>
+            <div class="progress-labels" id="labels-text"><span>前提</span><span>課題</span><span>アイデア</span><span>まとめ</span></div>
+        </div>
+        
+        <h2 id="text"></h2>
+        
+        <!-- BGMプレイリストUI -->
+        <div id="bgm-selector-container" class="bgm-selector" style="display: none;">
+            <label style="font-size: 1.05rem; color: #888;">BGMプレイリスト</label>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button type="button" class="arrow-btn" onclick="changeBgm(-1)">◀</button>
+                <div id="bgm-display" style="font-size: 1.6rem; font-weight: 900; color: #4aa8ff; width: 60px; text-align: center;">1</div>
+                <button type="button" class="arrow-btn" onclick="changeBgm(1)">▶</button>
+            </div>
+        </div>
+
+        <div id="interactive-area">
+            <div id="choices"></div>
+            <p id="feedback"></p>
+            <button id="next-step-btn" type="button">次へ進む</button>
+        </div>
+    </div>
+
+    <div class="sidebar-right">
+        <div id="prof-container" class="floating" onclick="talkToProf()">
+            <div id="prof-bubble" class="prof-bubble-large">ディスカッションを始めよう！</div>
+            <img id="prof-avatar" src="picture/ozawasensei/ozawa_default.png" alt="小澤先生">
+        </div>
+    </div>
+</div>
+
+<script>
+// 音声ファイルパス
+const seStart = new Audio('sound/SE/start.mp3');
+const seCorrect = new Audio('sound/SE/correct.mp3');
+const seWrong = new Audio('sound/SE/wrong.mp3');
+const seNeutral = new Audio('sound/SE/neutral.mp3');
+const seBackTop = new Audio('sound/SE/back_top.mp3');
+const seProfClick = new Audio('sound/SE/prof_click.mp3');
+const seReset = new Audio('sound/SE/reset.mp3');
+const seResultGood = new Audio('sound/SE/result_good.mp3');
+const seResultMid = new Audio('sound/SE/result_mid.mp3');
+const seResultBad = new Audio('sound/SE/result_bad.mp3');
+const seNext = new Audio('sound/SE/modal_open.mp3');
+const seModalOpen = new Audio('sound/SE/modal_open.mp3');
+const seBackStart = new Audio('sound/SE/back_start.mp3'); // 追加：スタートへ戻る音
+
+// BGM設定
+let currentBgmIndex = 1;
+const bgm = new Audio(`sound/BGM/discussion/discussion_${currentBgmIndex}.mp3`);
+bgm.loop = true;
+bgm.volume = 0.4;
+
+let isExiting = false;
+
+function playSE(audio) {
+    if (isExiting && audio !== seBackTop) return;
+    // 音声ノードを複製して独立して鳴らすことで、連続再生時の途切れを防ぐ
+    let soundClone = audio.cloneNode(true);
+    soundClone.volume = audio.volume || 1.0;
+    soundClone.play().catch(()=>{});
+}
+
+function playBackTopAndGo(url) {
+    isExiting = true;
+    bgm.pause(); // 遷移時にBGMを停止
+    playSE(seBackTop);
+    setTimeout(() => { window.location.href = url; }, 400);
+}
+
+// BGM切り替え機能
+window.changeBgm = function(dir) {
+    playSE(seModalOpen);
+    currentBgmIndex += dir;
+    if (currentBgmIndex > 5) currentBgmIndex = 1;
+    if (currentBgmIndex < 1) currentBgmIndex = 5;
+    
+    const disp = document.getElementById('bgm-display');
+    if (currentBgmIndex === 5) {
+        disp.innerText = "なし";
+        bgm.pause();
+    } else {
+        disp.innerText = currentBgmIndex;
+        const wasPlaying = !bgm.paused;
+        bgm.src = `sound/BGM/discussion/discussion_${currentBgmIndex}.mp3`;
+        // UIがプレイ中（コントロールが表示されている）であれば再生
+        if (wasPlaying && document.getElementById("controls").style.display !== "none") {
+            bgm.play().catch(e => console.log("BGM play failed", e));
+        }
+    }
+};
+
+// 🌟 修正：新しい中断音・戻る音のルール適用
+function interruptTest() {
+    playSE(seReset); // 押した瞬間にリセット音
+    setTimeout(() => {
+        if(confirm("本当にスタート画面に戻りますか？\n現在の議論の進行状況は失われます。")){
+            bgm.pause(); // BGMを停止
+            playSE(seBackStart); // OK時にスタートへ戻る音
+            startTheme();
+        } else {
+            playSE(seBackTop); // キャンセル時に戻る音
+        }
+    }, 50);
+}
+
+let score = 0;
+let stepCount = 0;
+let totalSteps = 4;
+let currentTheme = "";
+
+const themes = ["AI規制は必要か？","キャンセルカルチャー","AIは友達になれるか？","クロノタイプ","立教水","Google新ビジネス"];
+
+let discProfPool = [];
+let discProfIndex = 0;
+
+function setOzawaState(state, customText = "") {
+    if(state === "normal") {
+        discProfPool = [
+            {text: customText || "議論の本質はどこにあるかな？", img: "picture/ozawasensei/ozawa_default.png"}, 
+            {text: "ロジカルに考えてみよう！", img: "picture/ozawasensei/ozawa_default.png"}, 
+            {text: "自分の意見をしっかり持とうじゃないか。", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "表面的な問題に囚われてはいけないよ。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "色々な視点からアプローチしてみよう。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "前提がズレると、結論もズレてしまうからね。", img: "picture/ozawasensei/ozawa_default.png"}
+        ];
+    } else if(state === "correct") {
+        discProfPool = [
+            {text: customText, img: "picture/ozawasensei/ozawa_laugh.png"}, 
+            {text: "その通り！いい視点だね。", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "素晴らしい。本質を突いているよ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "そのロジック、とても説得力があるね。", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "おおっ、そこに着眼するとはお見事！", img: "picture/ozawasensei/ozawa_laugh.png"}
+        ];
+    } else if(state === "wrong") {
+        discProfPool = [
+            {text: customText, img: "picture/ozawasensei/ozawa_angry.png"}, 
+            {text: "うーん、少し論点がずれているかも。", img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "もう少し深く掘り下げてみようか。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "その視点も面白いが、今回のテーマの核とは違うかな。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "思い込みで判断していないか？ロジックを再確認しよう。", img: "picture/ozawasensei/ozawa_angry.png"}
+        ];
+    } else if(state === "end_perfect") {
+        discProfPool = [
+            {text: customText, img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "この調子で実際のゼミでも活躍してくれ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "とはいえ、現実の議論はもっと複雑だからな。慢心は禁物だぞ！", img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "君のような鋭い視点を持つ学生をゼミで待っているよ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "満点だ！ディスカッションの基本が完全に身についているね。", img: "picture/ozawasensei/ozawa_laugh.png"}
+        ];
+    } else if(state === "end_high") {
+        discProfPool = [
+            {text: customText, img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "良い視点を持っているね。さらに多角的に考えられれば完璧だ。", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "結果に満足して油断してはいけないよ。常に論理を磨き続けなさい！", img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "惜しい！あと少しで本質を完全に捉えられたはずだ。", img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "この悔しさをバネに、ゼミでさらに鍛え上げていこう！", img: "picture/ozawasensei/ozawa_laugh.png"}
+        ];
+    } else if(state === "end_low") {
+        discProfPool = [
+            {text: customText, img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "次は『前提』と『課題』が本当に結びついているか確認してみよう。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "失敗から学ぶことこそがディスカッションの醍醐味だよ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "最初は難しく感じるかもしれないが、場数を踏めば必ず上達するよ。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "論理の飛躍に気をつけながら、もう一度チャレンジしてみなさい！", img: "picture/ozawasensei/ozawa_default.png"}
+        ];
+    } else if(state === "end_zero") {
+        discProfPool = [
+            {text: customText, img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "落ち着いて、もう一度『前提』から論理を組み立て直すんだ。", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "最初からできる人はいないさ。何度も挑戦して感覚を掴むんだ！", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "思いつきだけで語らず、事実とロジックを積み重ねる意識を持とう。", img: "picture/ozawasensei/ozawa_angry.png"},
+            {text: "ゼミに入れば、基礎からみっちり鍛えてあげるから安心してくれ！", img: "picture/ozawasensei/ozawa_laugh.png"}
+        ];
+    } else if(state === "start") {
+        discProfPool = [
+            {text: "好きなテーマを選んでみよう！", img: "picture/ozawasensei/ozawa_default.png"},
+            {text: "どれも今の社会で重要な問いばかりだぞ。", img: "picture/ozawasensei/ozawa_laugh.png"},
+            {text: "正解のない問題にどう立ち向かうか、お手並み拝見といこう。", img: "picture/ozawasensei/ozawa_default.png"}
+        ];
+    }
+    discProfIndex = 0;
+    applyOzawaMsg();
+}
+
+function talkToProf() {
+    playSE(seProfClick);
+    discProfIndex = (discProfIndex + 1) % discProfPool.length;
+    applyOzawaMsg();
+}
+
+function applyOzawaMsg() {
+    const data = discProfPool[discProfIndex];
+    const bubble = document.getElementById("prof-bubble"); 
+    const avatar = document.getElementById("prof-avatar");
+    
+    bubble.innerHTML = data.text; 
+    avatar.src = data.img;
+
+    const wrapper = document.getElementById("prof-container");
+    wrapper.style.animation = 'none';
+    wrapper.offsetHeight; 
+    wrapper.style.animation = 'float 3s ease-in-out infinite';
+}
+
+function updateLabels() {
+  const labelsContainer = document.getElementById("labels-text");
+  labelsContainer.innerHTML = "<span>前提</span><span>課題</span><span>アイデア</span><span>まとめ</span>"; 
+}
+
+function render(text,choices){
+  stepCount = Math.min(stepCount + 1, totalSteps);
+  document.getElementById("progress").style.width = (stepCount / totalSteps * 100) + "%";
+  document.getElementById("text").innerText = text;
+  
+  const feedback = document.getElementById("feedback");
+  const nextBtn = document.getElementById("next-step-btn");
+  feedback.style.display = "none";
+  nextBtn.style.display = "none";
+  
+  if (!text.includes("あなたの論理スコア:") && text !== "体験するディスカッションテーマを選択してください") {
+      setOzawaState("normal");
+  }
+
+  const div = document.getElementById("choices");
+  div.innerHTML = "";
+
+  let displayChoices = [...choices];
+  let hasNeutral = displayChoices.some(c => c.neutral);
+  
+  if (text !== "体験するディスカッションテーマを選択してください" && !text.includes("別のテーマで遊ぶ") && !hasNeutral) {
+      displayChoices.sort(() => Math.random() - 0.5);
+  }
+
+  displayChoices.forEach(c=>{
+    const b = document.createElement("button"); 
+    b.type = "button"; 
+    b.className = "choice-btn"; 
+    b.innerText = c.label;
+    b.onclick = ()=>{
+      
+      const allBtns = div.querySelectorAll("button");
+      allBtns.forEach(btn => {
+          if(btn !== b) {
+              btn.style.display = 'none'; 
+          } else {
+              btn.disabled = true;
+              btn.classList.add("selected");
+          }
+      });
+
+      if (c.actionOnly) {
+          c.next();
+          return;
+      }
+      
+      feedback.style.display = "block";
+
+      if (c.isThemeSelect) {
+        playSE(seStart);
+        feedback.style.color = "#4aa8ff";
+        feedback.style.borderColor = "rgba(74,168,255,0.3)";
+        feedback.innerText = `テーマ「${c.label}」を開始します！`;
+        setOzawaState("normal", "いいテーマだね！さっそく始めよう。");
+        setTimeout(()=>{ c.next(); }, 1000); 
+        return;
+      }
+
+      nextBtn.style.display = "block";
+      nextBtn.onclick = () => {
+          playSE(seNext);
+          c.next();
+      };
+
+      if(c.neutral){
+        playSE(seNeutral);
+        feedback.style.color = "#4aa8ff"; 
+        feedback.style.borderColor = "rgba(74,168,255,0.4)";
+        feedback.innerHTML = "💡 <b>" + (c.explain || "その方針で議論を進めましょう") + "</b>";
+        setOzawaState("normal", "なるほど、その方針だね！");
+      }
+      else if(c.good){
+        score++;
+        playSE(seCorrect);
+        feedback.style.color = "#2b8a3e"; 
+        feedback.style.borderColor = "rgba(43,138,62,0.4)";
+        feedback.innerHTML = "✅ <b>正解：</b>" + (c.explain || "素晴らしい視点です！");
+        setOzawaState("correct", "その通り！いい視点だね！");
+      }else{
+        playSE(seWrong);
+        feedback.style.color = "#c92a2a"; 
+        feedback.style.borderColor = "rgba(201,42,42,0.4)";
+        feedback.innerHTML = "⚠ <b>惜しい：</b>" + (c.explain || "別視点の考え方です");
+        setOzawaState("wrong", "うーん、少し論点がずれているかな？");
+      }
+    };
+    div.appendChild(b);
+  });
+}
+
+function startTheme(){
+  score = 0; stepCount = 0; totalSteps = 4;
+  document.getElementById("progress").style.width = "0%";
+  document.getElementById("current-theme-display").style.display = "none";
+  document.getElementById("controls").style.display = "none"; 
+  document.getElementById("top-return-btn").style.display = "inline-block"; 
+  document.getElementById("feedback").style.display = "none";
+  document.getElementById("next-step-btn").style.display = "none";
+  
+  // BGMセレクタを表示
+  document.getElementById("bgm-selector-container").style.display = "flex";
+  updateLabels();
+
+  render("体験するディスカッションテーマを選択してください",themes.map(t=>({
+    label:t, isThemeSelect: true, 
+    next:()=>{
+      currentTheme = t; stepCount = 0;
+      document.getElementById("theme-name").innerText = t;
+      document.getElementById("current-theme-display").style.display = "block";
+      document.getElementById("controls").style.display = "flex"; 
+      document.getElementById("top-return-btn").style.display = "none"; 
+      
+      // BGMセレクタを隠す
+      document.getElementById("bgm-selector-container").style.display = "none";
+
+      // BGM再生開始
+      if (currentBgmIndex !== 5) {
+          bgm.currentTime = 0;
+          bgm.play().catch(e => console.log("BGM play failed", e));
+      }
+
+      if(t==="AI規制は必要か？"){ aiDefine(); }
+      else if(t==="キャンセルカルチャー"){ cancelDefine(); }
+      else if(t==="AIは友達になれるか？"){ friendDefine(); }
+      else if(t==="クロノタイプ"){ chronoDefine(); }
+      else if(t==="立教水"){ waterDefine(); }
+      else if(t==="Google新ビジネス"){ googleDefine(); }
+    }
+  })));
+  stepCount = 0; document.getElementById("progress").style.width = "0%";
+  setOzawaState("start");
+}
+
+/* AI規制 */
+function aiDefine(){ render("①前提定義：AI生成物は社会にどんな影響を与える？",[ 
+  { label:"社会への影響力が大きく慎重さが必要", good:true, explain:"リスクと影響度を考慮する標準的で安全な前提です。ここから議論を組み立てましょう。", next:aiProblem }, 
+  { label:"技術発展を優先すれば問題は後から解決できる", good:false, explain:"お題の『社会への影響』というニュアンスを軽視しています。インフラに関わる技術は事後対応では手遅れになるリスクがあります。", next:aiProblem }, 
+  { label:"利用者側のリテラシー向上が重要", good:false, explain:"教育視点も大切ですが、システムの提供側・法規制側の前提を先に固めないと議論の枠組みが広がりすぎてしまいます。", next:aiProblem }, 
+  { label:"AIの開発を完全にストップさせるべき", good:false, explain:"極端なブレーキは現実的な解決策になりません。技術の進化を前提とした上でどう付き合うかを考えるべきです。", next:aiProblem } 
+]); }
+
+function aiProblem(){ render("②課題特定：何が最大の課題？",[ 
+  { label:"偽情報や悪用による社会的混乱", good:true, explain:"民主主義の危機や詐欺など、もっとも広範で深刻な社会的リスクを的確に捉えられています。", next:aiIdea }, 
+  { label:"企業利益の減少", good:false, explain:"一企業の利益よりも、社会全体に及ぶ不利益や倫理的課題を優先して論じるのがディスカッションの基本です。", next:aiIdea }, 
+  { label:"AIの急速な普及", good:false, explain:"「普及が早いこと」自体は課題ではありません。普及によって「何が起きるか」を言語化する必要があります。", next:aiIdea }, 
+  { label:"AIが人間を支配すること", good:false, explain:"SF的な脅威よりも、直近で起きている著作権侵害やフェイクニュースなど、現実的な課題にフォーカスしましょう。", next:aiIdea } 
+]); }
+
+function aiIdea(){ render("③アイデア出し：どの方向でアプローチする？（進みたい方向を選んでください）",[ 
+  { label:"政府主導で透明性ルールを作る（分岐A）", neutral:true, explain:"公平性と透明性を保ちやすい、トップダウンのアプローチですね。", next:()=>aiIdeaBranch("A") }, 
+  { label:"企業主導で柔軟な自主規制を進める（分岐B）", neutral:true, explain:"技術変化のスピードに柔軟に対応しやすい、ボトムアップのアプローチですね。", next:()=>aiIdeaBranch("B") }, 
+  { label:"最低限のみ規制する（分岐C）", neutral:true, explain:"自由競争とイノベーションの促進を最優先するアプローチですね。", next:()=>aiIdeaBranch("C") } 
+]); }
+
+function aiIdeaBranch(branch){ 
+  let text = ""; let choices = []; 
+  if(branch === "A"){ 
+    text = "③アイデア具体化（政府主導）：さらに重視すべき点は？"; 
+    choices = [ 
+      { label:"全企業を統一管理しやすい体制づくり", good:true, explain:"ガバナンス（統治）が効きやすく、社会的な安心感に繋がります。", next:aiConclusion }, 
+      { label:"企業活動を制御しやすい強い規制", good:false, explain:"規制が強すぎると、自国のAI産業の発展を阻害し、国際競争力を失う恐れがあります。", next:aiConclusion }, 
+      { label:"違反企業を即座に潰すルール", good:false, explain:"制裁が目的化してしまい、市場全体が極度に萎縮してしまうため本質的な解決になりません。", next:aiConclusion }, 
+      { label:"海外のAIをすべて遮断する", good:false, explain:"鎖国的なアプローチは、グローバルな情報社会において自国の孤立を招くだけです。", next:aiConclusion } 
+    ]; 
+  } else if(branch === "B"){ 
+    text = "③アイデア具体化（企業主導）：さらに重視すべき点は？"; 
+    choices = [ 
+      { label:"利益を最大化しやすい環境づくり", good:false, explain:"企業の利己主義に走りすぎると、社会からの信頼を失い、結果的に強力な法規制を招きます。", next:aiConclusion }, 
+      { label:"技術変化に柔軟対応しつつ自律すること", good:true, explain:"スピード感と社会的責任（コンプライアンス）を両立できる素晴らしい視点です。", next:aiConclusion }, 
+      { label:"企業間でカルテルを結ぶ", good:false, explain:"独占禁止法などの別問題が発生し、健全な市場競争を阻害してしまいます。", next:aiConclusion }, 
+      { label:"政府の意見を完全に無視する", good:false, explain:"社会との対話を拒否することは、ビジネスにおいて最大の長期的リスクになります。", next:aiConclusion } 
+    ]; 
+  } else { 
+    text = "③アイデア具体化（最低限規制）：さらに重視すべき点は？"; 
+    choices = [ 
+      { label:"イノベーション加速による経済発展", good:false, explain:"競争は加速しますが、社会的リスク（偽情報など）への対策が抜け落ちてしまいます。", next:aiConclusion }, 
+      { label:"利用者責任を重視したリテラシー教育", good:true, explain:"システム側の規制を減らす分、ユーザー側の成熟（教育）でカバーするという論理的なアプローチです。", next:aiConclusion }, 
+      { label:"問題が起きてから法律を作る", good:false, explain:"AIの性質上、被害が拡大してからでは取り返しがつかない場合があります。", next:aiConclusion }, 
+      { label:"すべてのAIを有料化して壁を作る", good:false, explain:"根本的なリスク解決ではなく、経済力による機会格差を生むだけになってしまいます。", next:aiConclusion } 
+    ]; 
+  } 
+  stepCount--; render(text, choices); 
+}
+
+function aiConclusion(){ render("④まとめ：この議論の最終的な結論は？",[ 
+  { label:"安全性と発展を両立する仕組みを作る", good:true, explain:"相反する要素（トレードオフ）のバランスを取る、ビジネスにおいて理想的な結びです。", next:resultStep }, 
+  { label:"技術発展を最優先する", good:false, explain:"リスク対策が疎かになり、長期的には社会からの排斥を招く恐れがあります。", next:resultStep }, 
+  { label:"リスク回避を最優先する", good:false, explain:"技術の恩恵を完全に手放すことになり、経済的な停滞を招いてしまいます。", next:resultStep }, 
+  { label:"しばらく静観して他国の様子を見る", good:false, explain:"変化の激しい分野において、判断の先送り（機会損失）は致命的な遅れに繋がります。", next:resultStep } 
+]); }
+
+/* キャンセルカルチャー */
+function cancelDefine(){ render("①前提定義：キャンセルカルチャーへのスタンスをどう定義する？",[ 
+  { label:"責任追及と再起の機会の両立", good:true, explain:"過ちへの責任を問いばがらも、セカンドチャンスを残す寛容な姿勢です。", next:cancelProblem }, 
+  { label:"信用回復より厳しい制裁を優先", good:false, explain:"お題の『文化としてどう向き合うか』という視点が欠けています。過度な制裁は誰も挑戦できない不寛容な社会を生むだけです。", next:cancelProblem }, 
+  { label:"批判や炎上自体を抑制する", good:false, explain:"言論の自由や、弱者からの正当な告発（声を上げる機会）まで封じる恐れがあり、議論の前提として危険です。", next:cancelProblem }, 
+  { label:"時間が経てば忘れられるという考え", good:false, explain:"問題の根本解決に向き合わないため、同じことが形を変えて再発してしまいます。", next:cancelProblem } 
+]); }
+
+function cancelProblem(){ render("②課題特定：現状の何が一番の問題？",[ 
+  { label:"制裁が過剰化しやすいこと（私刑化）", good:true, explain:"法を超えた過度なバッシング（リンチ）に発展しやすい点が最大のリスクです。", next:cancelIdea }, 
+  { label:"炎上拡散の速度", good:false, explain:"速度も脅威ですが、本質は『過剰なバッシングという行為そのもの』が持つ暴力性です。", next:cancelIdea }, 
+  { label:"有名人への影響", good:false, explain:"対象は有名人に限りません。一般の企業や学生も標的になるリスクがある前提で議論すべきです。", next:cancelIdea }, 
+  { label:"企業がすぐに謝罪してしまうこと", good:false, explain:"企業の謝罪は結果（防衛策）であり、私刑化のプレッシャーこそが本質的な課題です。", next:cancelIdea } 
+]); }
+
+function cancelIdea(){ render("③アイデア出し：どうやって解決に向かう？",[ 
+  { label:"説明や改善の機会（対話の場）を設ける", good:true, explain:"一方的な排除ではなく、本人の説明や改善のプロセスを評価する建設的な仕組みです。", next:cancelConclusion }, 
+  { label:"一定期間で自動的に許容する", good:false, explain:"時間の経過だけで解決すると、問題の本質がうやむやになり納得感が得られません。", next:cancelConclusion }, 
+  { label:"批判を気にしない文化を作る", good:false, explain:"不適切な言動をそのまま容認することになりかねず、根本解決になりません。", next:cancelConclusion }, 
+  { label:"過去の失言を隠せるシステムを作る", good:false, explain:"隠蔽はかえって不信感を生み出し、さらなる大炎上を引き起こすだけです。", next:cancelConclusion } 
+]); }
+
+function cancelConclusion(){ render("④まとめ：目指すべき社会の姿は？",[ 
+  { label:"責任を問いつつ再挑戦できる社会", good:true, explain:"社会的な正義と、人間の不完全さを許容するバランスの取れた結論です。", next:resultStep }, 
+  { label:"厳格な制裁を維持する社会", good:false, explain:"不寛容で、誰もが怯えながら自己検閲して暮らす窮屈な社会になってしまいます。", next:resultStep }, 
+  { label:"批判を避ける社会", good:false, explain:"健全な議論や自浄作用が働かない、停滞した社会になります。", next:resultStep }, 
+  { label:"炎上した人を隔離する社会", good:false, explain:"コミュニティの分断を加速させるだけの、非常に危険な結論です。", next:resultStep } 
+]); }
+
+/* AIは友達になれるか */
+function friendDefine(){ render("①前提定義：AIとの関係性をどう定義する？",[ 
+  { label:"人間の補助的な存在として活用する", good:true, explain:"主体はあくまで人間であり、AIは関係性を豊かにするツールという前提です。", next:friendProblem }, 
+  { label:"現実の人間関係の代替として活用する", good:false, explain:"このお題が問うている『人間側の豊かさ』のニュアンスと異なります。現実からの逃避は根本的な孤独の解消にはなりません。", next:friendProblem }, 
+  { label:"AIの方が信頼できる存在とする", good:false, explain:"個人の感情としてはあり得ますが、社会全体の前提としては極端で偏りがあります。", next:friendProblem }, 
+  { label:"AIを人間と完全に同等とみなす", good:false, explain:"現状の技術や倫理観では飛躍しすぎているため、ディスカッションの前提になりにくいです。", next:friendProblem } 
+]); }
+
+function friendProblem(){ render("②課題特定：何が懸念される？",[ 
+  { label:"AI依存による孤立（現実の希薄化）", good:true, explain:"AIにのめり込むことで、リアルな対人関係の構築機会が失われるリスクです。", next:friendIdea }, 
+  { label:"AIの性能不足", good:false, explain:"技術は日々進化するため、性能不足は本質的・長期的な課題ではありません。", next:friendIdea }, 
+  { label:"AIに感情が存在しないこと", good:false, explain:"感情がなくても『共感しているように振る舞う』ことで依存は発生するため、論点が少しズレています。", next:friendIdea }, 
+  { label:"AIが人間に嘘をつくこと", good:false, explain:"ハルシネーション（嘘）も課題ですが、関係性の文脈では『依存による孤立』がより本質的です。", next:friendIdea } 
+]); }
+
+function friendIdea(){ render("③アイデア出し：理想的な付き合い方は？",[ 
+  { label:"AIを自己理解に使い、リアルな関係へ活かす", good:true, explain:"AIを壁打ち相手とし、それを現実の対人関係に還元する建設的なアプローチです。", next:friendConclusion }, 
+  { label:"悩み相談をすべてAI中心にする", good:false, explain:"客観的な意見は得られますが、他者と感情を分かち合う貴重な経験が失われてしまいます。", next:friendConclusion }, 
+  { label:"人間関係を減らして効率化する", good:false, explain:"コミュニケーションの効率化は、本質的な孤独の解消には繋がりません。", next:friendConclusion }, 
+  { label:"AIとの親密な会話を禁止する", good:false, explain:"心のケアなど、AIが持つポジティブな側面まで完全に潰してしまうのはもったいないです。", next:friendConclusion } 
+]); }
+
+function friendConclusion(){ render("④まとめ：結論としてどう着地させる？",[ 
+  { label:"AIは現実のつながりを促す支援ツールとする", good:true, explain:"人間の自律性を保ちながら、AIの利便性を享受する綺麗な着地です。", next:resultStep }, 
+  { label:"AI中心の関係へ完全に移行する", good:false, explain:"社会全体のコミュニティが崩壊し、少子化や分断など別次元の問題を引き起こします。", next:resultStep }, 
+  { label:"AIを人より優先する", good:false, explain:"人間社会の根本的なつながりを否定することになってしまいます。", next:resultStep }, 
+  { label:"AIのコミュニケーション機能を規制する", good:false, explain:"有用なツールを完全に手放すのは、技術の進化に逆行する選択です。", next:resultStep } 
+]); }
+
+/* クロノタイプ */
+function chronoDefine(){ render("①前提定義：朝型・夜型などの生体リズムをどう扱うべき？",[ 
+  { label:"個人差と社会生活の両立が必要", good:true, explain:"個人の生体リズムを守りつつ、社会の生産性や機能も維持する現実的な前提です。", next:chronoProblem }, 
+  { label:"朝型は優秀で、夜型は努力不足と考える", good:false, explain:"前提の認識が誤っています。クロノタイプは遺伝的特性であり、個人の努力不足に帰結させるのは論理的ではありません。", next:chronoProblem }, 
+  { label:"好きな時間だけで生活するべき", good:false, explain:"理想ですが、他者との協働や社会インフラ（お店や役所など）の維持が困難になります。", next:chronoProblem }, 
+  { label:"気合と根性で朝型に矯正できる", good:false, explain:"医学的に否定されているアプローチであり、健康を害する前提に立っています。", next:chronoProblem } 
+]); }
+
+function chronoProblem(){ render("②課題特定：現在の社会システムのどこに歪みがある？",[ 
+  { label:"自己最適と社会適応のミスマッチによる不利益", good:true, explain:"朝型ベースの社会ルールにより、夜型が健康被害や評価の損失を被っている点です。", next:chronoIdea }, 
+  { label:"夜型生活を続ける人がいること", good:false, explain:"夜型であること自体は問題ではなく、社会のルールと合っていないことが問題の本質です。", next:chronoIdea }, 
+  { label:"全員を同じ生活へ合わせること", good:false, explain:"画一化への批判としては正しいですが、それによって『本来の能力を発揮できない人がいる』という損失に繋げる必要があります。", next:chronoIdea }, 
+  { label:"朝起きられない人が多いこと", good:false, explain:"それは表面的な現象であり、根本にある社会構造とのミスマッチが本質です。", next:chronoIdea } 
+]); }
+
+function chronoIdea(){ render("③アイデア出し：どのような対策が効果的？",[ 
+  { label:"柔軟な働き方（フレックス）と自己管理の徹底", good:true, explain:"制度の柔軟化と、自身のタイプを知るマネジメントを組み合わせた現実的な解決策です。", next:chronoConclusion }, 
+  { label:"完全自由な生活リズムを許可する", good:false, explain:"連絡が全く取れなくなるなど、チーム単位の業務に重大な支障が出る可能性があります。", next:chronoConclusion }, 
+  { label:"朝型中心の生活へ合わせる努力を促す", good:false, explain:"現状維持の強要であり、クロノタイプの多様性を完全に無視しています。", next:chronoConclusion }, 
+  { label:"夜型の人だけ深夜手当をなくす", good:false, explain:"特性に対するペナルティとなり、多様性の尊重という観点から論外です。", next:chronoConclusion } 
+]); }
+
+function chronoConclusion(){ render("④まとめ：あるべき未来の形は？",[ 
+  { label:"個人のリズムを尊重し、社会の生産性と調整する", good:true, explain:"個人の幸福度（ウェルビーイング）と社会の生産性を両立させる結論です。", next:resultStep }, 
+  { label:"生産性を最優先し、規律を重んじる", good:false, explain:"合わない人に無理をさせる構造が残り、根本的な健康・メンタル課題が解決しません。", next:resultStep }, 
+  { label:"社会へ完全適応する", good:false, explain:"多様性を切り捨て、個人の犠牲の上に成り立つ古いモデルに戻ってしまいます。", next:resultStep }, 
+  { label:"夜型だけで構成された社会を作る", good:false, explain:"朝型の人が逆に排除されるだけであり、問題の裏返しにすぎません。", next:resultStep } 
+]); }
+
+/* 立教水 */
+function waterDefine(){ render("①前提定義：大学オリジナル商品の価値をどこに置く？",[ 
+  { label:"ストーリーや所属意識などの体験価値", good:true, explain:"大学ブランド水は単なる水分補給ではなく、学校への愛着や意義を売るものです。", next:waterProblem }, 
+  { label:"価格の安さ", good:false, explain:"『大学オリジナル商品』が持つ付加価値という本来の強みを活かせておらず、論点がずれています。市販品とは戦えません。", next:waterProblem }, 
+  { label:"目立つインパクト", good:false, explain:"一発ネタで終わってしまい、持続的な大学のブランディングになりにくいです。", next:waterProblem }, 
+  { label:"水の美味しさや成分", good:false, explain:"飲料水市場における成分の差別化は困難であり、大学が打ち出す本質的な強みではありません。", next:waterProblem } 
+]); }
+
+function waterProblem(){ render("②課題特定：現状の何が課題？",[ 
+  { label:"商品背景にあるストーリーが十分伝わっていない", good:true, explain:"良い理念があるのに、学生への認知や共感が追いついていない点を的確に突いています。", next:waterIdea }, 
+  { label:"商品名の印象", good:false, explain:"名前そのものより、その名前に込められた意味の伝え方（マーケティング）が重要です。", next:waterIdea }, 
+  { label:"水自体の特徴不足", good:false, explain:"成分（硬度など）の差別化は、ブランド水を選ぶ学生の購買動機にはあまり響きません。", next:waterIdea }, 
+  { label:"ボトルのデザインが古いこと", good:false, explain:"デザインも要素ですが、その奥にある理念やストーリーの欠如が根本的な課題です。", next:waterIdea } 
+]); }
+
+function waterIdea(){ render("③アイデア出し：どうやって魅力を伝える？",[ 
+  { label:"体験型イベントや学内ストーリーと絡めた企画を作る", good:true, explain:"購買行動を『大学との繋がりを感じる体験』に昇華させる正しいアプローチです。", next:waterConclusion }, 
+  { label:"値下げをして大量販売する", good:false, explain:"ブランド価値が下がり、収益が出なくなる悪循環に陥ります。", next:waterConclusion }, 
+  { label:"派手な演出で注目を集める", good:false, explain:"一時的な流行（バズ）で終わり、熱量の高いリピーターに繋がりません。", next:waterConclusion }, 
+  { label:"強制的に学生に買わせる仕組み", good:false, explain:"ブランドへの愛着どころか強烈な反感を買ってしまいます。", next:waterConclusion } 
+]); }
+
+function waterConclusion(){ render("④まとめ：目指すべきゴールは？",[ 
+  { label:"ブランド価値を継続的に高め、ファンを増やす", good:true, explain:"学生・OB・地域に長く愛されるサステナブル（持続可能）な着地です。", next:resultStep }, 
+  { label:"価格競争で販売数を増やす", good:false, explain:"消耗戦になり、大学がやるべきビジネスの枠から完全に外れてしまいます。", next:resultStep }, 
+  { label:"話題性を最優先する", good:false, explain:"ブームが去った後に大量の在庫を抱えるリスクが高くなります。", next:resultStep }, 
+  { label:"売れなければすぐに販売をやめる", good:false, explain:"長期的な視点でブランドを育てるという視点が欠如しています。", next:resultStep } 
+]); }
+
+/* Google新ビジネス */
+function googleDefine(){ render("①前提定義：Googleのビジネスの根幹は何か？",[ 
+  { label:"情報の整理基盤と圧倒的なユーザー体験", good:true, explain:"『世界中の情報を整理する』というミッションに忠実な、ブレない前提です。", next:googleProblem }, 
+  { label:"広告収益モデル", good:false, explain:"現状の手段にすぎず、『Googleの根幹の価値は何か』という前提の定義としては表面的な捉え方になっています。", next:googleProblem }, 
+  { label:"AI技術力", good:false, explain:"強力な武器ですが、それをどう使ってユーザーに価値を届けるかという目的意識が必要です。", next:googleProblem }, 
+  { label:"ハードウェアの販売力", good:false, explain:"スマホ等も作っていますが、競争力の源泉（根幹）はソフトウェアと情報データです。", next:googleProblem } 
+]); }
+
+function googleProblem(){ render("②課題特定：今、直面している最大の壁は？",[ 
+  { label:"AIの台頭による『検索→広告』モデルの崩壊リスク", good:true, explain:"AIが直接答えを出すようになると、誰も検索広告をクリックしなくなるという本質的な危機を捉えています。", next:googleIdea }, 
+  { label:"無料サービス維持のコスト", good:false, explain:"コスト問題も重要ですが、ユーザーが他社AIに流出することの方が致命的です。", next:googleIdea }, 
+  { label:"既存検索エンジンの精度低下", good:false, explain:"精度の微修正では、AIチャットというパラダイムシフト（構造的変化）に対応できません。", next:googleIdea }, 
+  { label:"社員の給料が高すぎること", good:false, explain:"コスト削減の話であり、ビジネスモデルの転換という本質からずれています。", next:googleIdea } 
+]); }
+
+function googleIdea(){ render("③アイデア出し：次世代の収益をどこで作る？",[ 
+  { label:"AIの高度な機能に対する直接課金（サブスク）モデル", good:true, explain:"便利なAI機能そのものに直接対価を払ってもらう、確実なプレミアムモデルへの移行です。", next:googleConclusion }, 
+  { label:"広告の表示量をさらに増やす", good:false, explain:"ユーザー体験が著しく悪化し、他社サービスへの顧客離れを加速させる悪手です。", next:googleConclusion }, 
+  { label:"既存の検索エンジンだけを守り抜く", good:false, explain:"完全な守りの姿勢であり、破壊的イノベーションに対して生き残れません。", next:googleConclusion }, 
+  { label:"検索サービス自体を明日から有料化する", good:false, explain:"長年培った圧倒的シェアを一気に失う危険な賭けです。", next:googleConclusion } 
+]); }
+
+function googleConclusion(){ render("④まとめ：新しいビジネスが目指す方向は？",[ 
+  { label:"ユーザー価値を中心に置いた、脱・広告の新たな収益網", good:true, explain:"情報の価値を守りつつ、時代の変化に合わせた健全なエコシステムを作る結論です。", next:resultStep }, 
+  { label:"既存の広告依存を意地でも維持する", good:false, explain:"市場のトレンド変化により、中長期的にジリ貧になる可能性が極めて高いです。", next:resultStep }, 
+  { label:"完全無料戦略をさらに拡大する", good:false, explain:"AIの開発・サーバー維持コストが膨大になり、収益性が崩壊します。", next:resultStep }, 
+  { label:"他社のAIモデルをひたすらコピーして追従する", good:false, explain:"トップ企業としての優位性とブランドを放棄し、長期的には衰退します。", next:resultStep } 
+]); }
+
+function resultStep(){
+  bgm.pause(); // 終了時にBGM停止
+  let msg = "";
+  let stateKey = "";
+  let stateMsg = "";
+  
+  if(score === 4){ 
+    msg = "🎉 完璧なロジックだ！君の視点は非常に鋭いよ！";
+    stateKey = "end_perfect";
+    stateMsg = "完璧なロジックだ！君の視点は非常に鋭いよ！";
+    playSE(seResultGood);
+  }else if(score === 3){
+    msg = "🙂 かなり良い線を行っているね！あともう一歩で完璧だ。";
+    stateKey = "end_high";
+    stateMsg = "かなり良い線を行っているね！あともう一歩で完璧だ。";
+    playSE(seResultMid);
+  }else if(score === 1 || score === 2){
+    msg = "🤔 うーん、少し論理が飛躍してしまったかな。前提から見直そう。";
+    stateKey = "end_low";
+    stateMsg = "うーん、少し論理が飛躍してしまったかな。前提から見直そう。";
+    playSE(seResultMid);
+  }else{
+    msg = "💢 なんだこの議論は！これでは何も解決しないぞ！";
+    stateKey = "end_zero";
+    stateMsg = "なんだこの議論は！これでは何も解決しないぞ！";
+    playSE(seResultBad);
+  }
+
+  msg += `\n（あなたの論理スコア: ${score} / ${totalSteps}）`;
+  document.getElementById("feedback").style.color = "#2b8a3e";
+  
+  render(msg,[
+    {
+      label:"別のテーマで遊ぶ（タイトルに戻る）",
+      actionOnly: true,
+      next:()=>{ 
+          playSE(seBackStart); // 🌟 別のテーマへ遊ぶ際もスタートへ戻る音
+          startTheme(); 
+      } 
+    }
+  ]);
+  document.getElementById("progress").style.width = "100%";
+  
+  setOzawaState(stateKey, stateMsg);
+}
+
+startTheme();
+</script>
+</body>
+</html>
